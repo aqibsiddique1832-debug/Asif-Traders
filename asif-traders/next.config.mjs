@@ -5,10 +5,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Add all category and product slugs for static generation
-  async routes() {
-    return [];
-  },
 };
 
 export default nextConfig;

@@ -52,32 +52,37 @@ export default function Header() {
       <header className="sticky top-0 z-40 bg-white shadow-sm">
         {/* Main Header */}
         <div className="container">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 lg:h-16">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(true)}
               className="p-2 rounded-lg hover:bg-sandstone transition-colors lg:hidden"
               aria-label="Open menu"
             >
-              <Menu className="w-6 h-6 text-charcoal" />
+              <Menu className="w-5 h-5 text-charcoal" />
             </button>
 
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-terracotta rounded-lg flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                  <path d="M12 2L2 8v12h20V8L12 2zm0 2.5L19 8v2H5V8l7-3.5zM7 12v6h3v-4h4v4h3v-6H7z"/>
+            {/* Premium Logo */}
+            <Link href="/" className="flex items-center gap-2 lg:gap-3">
+              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-terracotta to-terracotta-dark rounded-xl flex items-center justify-center shadow-md">
+                <svg viewBox="0 0 32 32" className="w-7 h-7 lg:w-8 lg:h-8 text-white" fill="currentColor">
+                  {/* Modern AT Logo */}
+                  <path d="M4 24V8h2.5l8 12 8-12H25v16h-2.5V13l-7 10.5L9 13v11H4z" fill="white"/>
+                  <rect x="14" y="18" width="4" height="6" fill="white" opacity="0.7"/>
                 </svg>
               </div>
-              <div className="hidden sm:block">
-                <span className="text-xl font-bold text-terracotta" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <div>
+                <span className="text-lg lg:text-xl font-bold text-charcoal tracking-tight" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
                   ASIF TRADERS
                 </span>
+                <p className="text-[10px] lg:text-xs text-text-secondary -mt-0.5 hidden sm:block">
+                  Building Materials Supplier
+                </p>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-6">
+            <nav className="hidden lg:flex items-center gap-5">
               <Link
                 href="/"
                 className={`font-medium transition-colors ${pathname === '/' ? 'text-terracotta' : 'text-charcoal hover:text-terracotta'}`}
@@ -124,21 +129,21 @@ export default function Header() {
             </nav>
 
             {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-md mx-8">
+            <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
                 <input
                   type="text"
                   placeholder={searchPlaceholders[searchIndex]}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border-2 border-sandstone rounded-full focus:border-terracotta focus:outline-none transition-colors"
+                  className="w-full pl-10 pr-4 py-2 border-2 border-sandstone rounded-full focus:border-terracotta focus:outline-none transition-colors text-sm"
                 />
               </div>
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 lg:gap-2">
               {/* Mobile Search */}
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -151,7 +156,7 @@ export default function Header() {
               {/* Offers Badge */}
               <Link
                 href="/quote"
-                className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-amber/20 text-amber-dark rounded-full text-sm font-semibold"
+                className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-amber/20 text-amber-dark rounded-full text-xs font-semibold"
               >
                 <span>Get Best Price</span>
               </Link>
@@ -162,7 +167,7 @@ export default function Header() {
                 className="relative p-2 rounded-lg hover:bg-sandstone transition-colors"
                 aria-label="Cart"
               >
-                <ShoppingCart className="w-6 h-6 text-charcoal" />
+                <ShoppingCart className="w-5 h-5 text-charcoal" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-terracotta text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse-custom">
                     {cartCount > 9 ? '9+' : cartCount}
@@ -176,16 +181,16 @@ export default function Header() {
                 className="p-2 rounded-lg hover:bg-sandstone transition-colors"
                 aria-label="Account"
               >
-                <User className="w-6 h-6 text-charcoal" />
+                <User className="w-5 h-5 text-charcoal" />
               </Link>
             </div>
           </div>
 
           {/* Mobile Search Expanded */}
           {isSearchOpen && (
-            <div className="pb-4 md:hidden">
+            <div className="pb-3 md:hidden">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
                 <input
                   type="text"
                   placeholder={searchPlaceholders[searchIndex]}
@@ -204,22 +209,22 @@ export default function Header() {
           <div className="container">
             <button
               onClick={() => setShowLocationModal(true)}
-              className="flex items-center gap-2 py-2 text-sm hover:text-terracotta transition-colors"
+              className="flex items-center gap-2 py-1.5 lg:py-2 text-xs lg:text-sm hover:text-terracotta transition-colors w-full"
             >
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
               {isLocationSet && location ? (
                 <>
                   <span>Delivering to: <strong>{location.area}, {location.city}</strong></span>
                   <span className="text-text-secondary">({location.pincode})</span>
                   <span className="hidden sm:inline text-success flex items-center gap-1 ml-2">
-                    <span className="w-2 h-2 bg-success rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-success rounded-full"></span>
                     Delivery in {location.deliveryDays}
                   </span>
                 </>
               ) : (
-                <span className="text-terracotta font-medium">Select delivery location</span>
+                <span className="text-terracotta font-medium">📍 Select delivery location</span>
               )}
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-3.5 h-3.5 lg:w-4 lg:h-4 ml-auto" />
             </button>
           </div>
         </div>
@@ -235,12 +240,13 @@ export default function Header() {
           <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 shadow-2xl animate-slide-in-right lg:hidden overflow-y-auto">
             <div className="p-4 border-b border-sandstone flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-terracotta rounded-lg flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                    <path d="M12 2L2 8v12h20V8L12 2zm0 2.5L19 8v2H5V8l7-3.5zM7 12v6h3v-4h4v4h3v-6H7z"/>
+                <div className="w-10 h-10 bg-gradient-to-br from-terracotta to-terracotta-dark rounded-xl flex items-center justify-center shadow-md">
+                  <svg viewBox="0 0 32 32" className="w-7 h-7 text-white" fill="currentColor">
+                    <path d="M4 24V8h2.5l8 12 8-12H25v16h-2.5V13l-7 10.5L9 13v11H4z" fill="white"/>
+                    <rect x="14" y="18" width="4" height="6" fill="white" opacity="0.7"/>
                   </svg>
                 </div>
-                <span className="text-lg font-bold text-terracotta" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <span className="text-lg font-bold text-charcoal" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
                   ASIF TRADERS
                 </span>
               </div>
@@ -248,7 +254,7 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
                 className="p-2 rounded-lg hover:bg-sandstone transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -258,18 +264,18 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sandstone transition-colors"
               >
-                <span className="text-lg">Home</span>
+                <span className="text-base">Home</span>
               </Link>
 
               <div className="px-4 py-3">
-                <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-2">Categories</h3>
-                <div className="space-y-1">
+                <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Categories</h3>
+                <div className="space-y-0.5">
                   {categories.map(cat => (
                     <Link
                       key={cat.slug}
                       href={`/category/${cat.slug}`}
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-sandstone transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sandstone transition-colors text-sm"
                     >
                       {cat.name}
                       <span className="ml-auto text-xs text-text-secondary">{cat.productCount}+</span>
@@ -278,38 +284,38 @@ export default function Header() {
                 </div>
               </div>
 
-              <div className="border-t border-sandstone my-4" />
+              <div className="border-t border-sandstone my-3" />
 
               <Link
                 href="/orders"
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sandstone transition-colors"
               >
-                <span className="text-lg">My Orders</span>
+                <span className="text-base">My Orders</span>
               </Link>
               <Link
                 href="/quote"
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sandstone transition-colors"
               >
-                <span className="text-lg">Request Quote</span>
+                <span className="text-base">Request Quote</span>
               </Link>
               <Link
                 href="/about"
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sandstone transition-colors"
               >
-                <span className="text-lg">About Us</span>
+                <span className="text-base">About Us</span>
               </Link>
               <Link
                 href="/contact"
                 onClick={() => setIsMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sandstone transition-colors"
               >
-                <span className="text-lg">Contact</span>
+                <span className="text-base">Contact</span>
               </Link>
 
-              <div className="border-t border-sandstone my-4" />
+              <div className="border-t border-sandstone my-3" />
 
               <a
                 href="tel:+917977572727"
@@ -325,7 +331,7 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sandstone transition-colors"
                 >
-                  <span className="text-lg">My Profile</span>
+                  <span className="text-base">My Profile</span>
                 </Link>
               ) : (
                 <Link
@@ -333,7 +339,7 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sandstone transition-colors"
                 >
-                  <span className="text-lg">Login / Sign Up</span>
+                  <span className="text-base">Login / Sign Up</span>
                 </Link>
               )}
             </nav>
