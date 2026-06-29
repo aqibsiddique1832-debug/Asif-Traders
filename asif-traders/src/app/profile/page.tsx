@@ -210,7 +210,7 @@ export default function ProfilePage() {
 
               <Link
                 href="/login"
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.preventDefault();
                   handleLogout();
                 }}

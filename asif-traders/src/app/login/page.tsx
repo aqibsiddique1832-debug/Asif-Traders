@@ -102,7 +102,7 @@ export default function LoginPage() {
       showToast('Login successful!', 'success');
       router.push('/profile');
     } else {
-      setError('Invalid OTP. Please try again. (Hint: Use 123456 for demo)');
+      setError('Invalid OTP. Please try again.');
     }
 
     setIsVerifying(false);
@@ -199,12 +199,9 @@ export default function LoginPage() {
                   )}
                 </button>
 
-                {/* Demo Hint */}
-                <div className="mt-4 p-3 bg-sandstone/50 rounded-lg text-sm text-center">
-                  <p className="text-text-secondary">
-                    Demo: Use <span className="font-mono font-bold text-terracotta">123456</span> as OTP
-                  </p>
-                </div>
+                <p className="text-xs text-text-secondary text-center mt-4">
+                  OTP sent to +91 {phone}
+                </p>
               </>
             ) : (
               <>

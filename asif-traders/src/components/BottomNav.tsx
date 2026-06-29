@@ -37,8 +37,8 @@ export default function BottomNav() {
               <div className="relative">
                 <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-2 w-4 h-4 bg-terracotta text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {item.badge > 9 ? '9+' : item.badge}
+                  <span className={`absolute -top-1 ${item.badge > 99 ? '-right-3' : '-right-2'} bg-terracotta text-white font-bold rounded-full flex items-center justify-center ${item.badge > 99 ? 'w-6 h-4 text-[9px] px-1' : 'w-4 h-4 text-[10px]'}`}>
+                    {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </div>

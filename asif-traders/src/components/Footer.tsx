@@ -170,7 +170,7 @@ export default function Footer() {
         href="https://wa.me/917977572727?text=Hi,%20I%20want%20a%20quote%20for%20building%20materials%20from%20ASIF%20TRADERS."
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-24 lg:bottom-6 right-4 w-12 h-12 lg:w-14 lg:h-14 bg-success rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-40"
+        className="fixed bottom-20 lg:bottom-6 right-4 w-12 h-12 lg:w-14 lg:h-14 bg-success rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-40"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
         aria-label="Chat on WhatsApp"
       >

@@ -130,28 +130,28 @@ export default function Header() {
 
             {/* Search Bar - Desktop */}
             <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
-              <div className="relative w-full">
+              <form action="/search" method="get" className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
                 <input
                   type="text"
+                  name="q"
                   placeholder={searchPlaceholders[searchIndex]}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  defaultValue={searchQuery}
                   className="w-full pl-10 pr-4 py-2 border-2 border-sandstone rounded-full focus:border-terracotta focus:outline-none transition-colors text-sm"
                 />
-              </div>
+              </form>
             </div>
 
             {/* Right Actions */}
             <div className="flex items-center gap-1 lg:gap-2">
               {/* Mobile Search */}
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
+              <Link
+                href="/search"
                 className="p-2 rounded-lg hover:bg-sandstone transition-colors md:hidden"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5 text-charcoal" />
-              </button>
+              </Link>
 
               {/* Offers Badge */}
               <Link
@@ -169,8 +169,8 @@ export default function Header() {
               >
                 <ShoppingCart className="w-5 h-5 text-charcoal" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-terracotta text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse-custom">
-                    {cartCount > 9 ? '9+' : cartCount}
+                  <span className={`absolute -top-1 ${cartCount > 99 ? '-right-2' : '-right-1'} bg-terracotta text-white font-bold rounded-full flex items-center justify-center animate-pulse-custom ${cartCount > 99 ? 'w-7 h-5 text-[10px] px-1' : 'w-5 h-5 text-xs'}`}>
+                    {cartCount > 99 ? '99+' : cartCount}
                   </span>
                 )}
               </Link>
