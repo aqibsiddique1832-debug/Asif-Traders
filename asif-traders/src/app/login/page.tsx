@@ -5,20 +5,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-import { ChevronRight, Phone, Lock, Eye, EyeOff, Check } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ChevronRight, User } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, sendOtp, user, isLoading } = useAuth();
+  const { login, user, isLoading } = useAuth();
   const { showToast } = useToast();
 
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [isSending, setIsSending] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [showOtp, setShowOtp] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState('');
 
   // Redirect if already logged in
@@ -28,98 +27,41 @@ export default function LoginPage() {
     }
   }, [user, isLoading, router]);
 
-  const handleSendOtp = async () => {
-    if (!phone || phone.length !== 10) {
-      setError('Please enter a valid 10-digit phone number');
-      return;
-    }
-
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
-    setIsSending(true);
-
-    const success = await sendOtp(`+91${phone}`);
-
-    if (success) {
-      setStep('otp');
-      setCountdown(30);
-      showToast('OTP sent successfully!', 'success');
-    } else {
-      setError('Failed to send OTP. Please try again.');
-    }
-
-    setIsSending(false);
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) {
-      // Handle paste
-      const digits = value.replace(/\D/g, '').slice(0, 6).split('');
-      const newOtp = [...otp];
-      digits.forEach((digit, i) => {
-        if (index + i < 6) {
-          newOtp[index + i] = digit;
-        }
-      });
-      setOtp(newOtp);
-      // Focus on last filled or next empty
-      const nextEmpty = newOtp.findIndex((d, i) => i >= index && !d);
-      const focusIndex = nextEmpty === -1 ? 5 : nextEmpty;
-      document.getElementById(`otp-${focusIndex}`)?.focus();
-      return;
-    }
-
-    if (/^\d?$/.test(value)) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-
-      // Auto-advance
-      if (value && index < 5) {
-        document.getElementById(`otp-${index + 1}`)?.focus();
-      }
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      document.getElementById(`otp-${index - 1}`)?.focus();
-    }
-  };
-
-  const handleVerify = async () => {
-    const otpValue = otp.join('');
-    if (otpValue.length !== 6) {
-      setError('Please enter the complete 6-digit OTP');
-      return;
-    }
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
-    setIsVerifying(true);
 
-    const success = await login(`+91${phone}`, otpValue);
+    if (!formData.email || !formData.password) {
+      setError('Please enter both email and password');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setIsLoggingIn(true);
+
+    const success = await login(formData.email, formData.password);
 
     if (success) {
       showToast('Login successful!', 'success');
       router.push('/profile');
     } else {
-      setError('Invalid OTP. Please try again.');
+      setError('Invalid email or password. Please try again.');
     }
 
-    setIsVerifying(false);
+    setIsLoggingIn(false);
   };
-
-  const handleResendOtp = async () => {
-    if (countdown > 0) return;
-    await handleSendOtp();
-  };
-
-  // Countdown timer
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown]);
 
   if (isLoading) {
     return (
@@ -144,143 +86,131 @@ export default function LoginPage() {
               Welcome to ASIF TRADERS
             </h1>
             <p className="text-text-secondary mt-1">
-              {step === 'phone' ? 'Enter your phone number to continue' : 'Enter the OTP sent to your phone'}
+              Sign in to your account to continue
             </p>
           </div>
 
           {/* Form Card */}
           <div className="card p-6">
-            {step === 'phone' ? (
-              <>
-                {/* Phone Input */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-charcoal mb-2">Phone Number</label>
-                  <div className="flex gap-2">
-                    <div className="flex items-center px-4 py-3 bg-sandstone/50 rounded-lg text-charcoal font-medium">
-                      +91
-                    </div>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => {
-                        setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
-                        setError('');
-                      }}
-                      placeholder="Enter 10-digit number"
-                      className="input flex-1"
-                      maxLength={10}
-                      autoFocus
-                    />
-                  </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email Input */}
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter your email"
+                    className="input pl-12"
+                    autoComplete="email"
+                    autoFocus
+                  />
                 </div>
+              </div>
 
-                {error && (
-                  <p className="text-error text-sm mb-4">{error}</p>
-                )}
-
-                <button
-                  onClick={handleSendOtp}
-                  disabled={isSending || phone.length !== 10}
-                  className="w-full btn-primary py-3 flex items-center justify-center gap-2"
-                >
-                  {isSending ? (
-                    <>
-                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      Send OTP
-                      <ChevronRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
-
-                <p className="text-xs text-text-secondary text-center mt-4">
-                  OTP sent to +91 {phone}
-                </p>
-              </>
-            ) : (
-              <>
-                {/* OTP Input */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-charcoal mb-3">Enter 6-digit OTP</label>
-                  <div className="flex gap-2 justify-between">
-                    {otp.map((digit, index) => (
-                      <input
-                        key={index}
-                        id={`otp-${index}`}
-                        type={showOtp ? 'text' : 'password'}
-                        value={digit}
-                        onChange={(e) => handleOtpChange(index, e.target.value)}
-                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className="w-12 h-14 text-center text-2xl font-bold input"
-                        maxLength={6}
-                        autoFocus={index === 0}
-                      />
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between mt-3">
-                    <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={showOtp}
-                        onChange={(e) => setShowOtp(e.target.checked)}
-                        className="w-4 h-4 accent-terracotta"
-                      />
-                      Show OTP
-                    </label>
-                    <button
-                      onClick={handleResendOtp}
-                      disabled={countdown > 0}
-                      className={`text-sm ${countdown > 0 ? 'text-text-secondary' : 'text-terracotta hover:underline'}`}
-                    >
-                      {countdown > 0 ? `Resend in ${countdown}s` : 'Resend OTP'}
-                    </button>
-                  </div>
+              {/* Password Input */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-charcoal">
+                    Password
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-terracotta hover:underline"
+                  >
+                    Forgot Password?
+                  </Link>
                 </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter your password"
+                    className="input pl-12 pr-12"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary hover:text-charcoal transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
 
-                {error && (
-                  <p className="text-error text-sm mb-4">{error}</p>
+              {/* Error Message */}
+              {error && (
+                <div className="p-3 bg-error/10 border border-error/20 rounded-lg">
+                  <p className="text-sm text-error">{error}</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full btn-primary py-3 flex items-center justify-center gap-2"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <ChevronRight className="w-5 h-5" />
+                  </>
                 )}
+              </button>
+            </form>
 
-                <button
-                  onClick={handleVerify}
-                  disabled={isVerifying || otp.join('').length !== 6}
-                  className="w-full btn-primary py-3 flex items-center justify-center gap-2"
-                >
-                  {isVerifying ? (
-                    <>
-                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Verifying...
-                    </>
-                  ) : (
-                    'Verify & Login'
-                  )}
-                </button>
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-sandstone" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-text-secondary">Or</span>
+              </div>
+            </div>
 
-                <button
-                  onClick={() => {
-                    setStep('phone');
-                    setOtp(['', '', '', '', '', '']);
-                    setError('');
-                  }}
-                  className="w-full mt-3 text-center text-sm text-text-secondary hover:text-terracotta"
-                >
-                  Change phone number
-                </button>
-              </>
-            )}
+            {/* Demo Credentials Info */}
+            <div className="p-4 bg-sandstone/50 rounded-xl">
+              <p className="text-xs text-text-secondary text-center mb-2 font-medium">Demo Credentials (for testing):</p>
+              <div className="text-xs text-text-secondary space-y-1">
+                <p><span className="font-medium">Email:</span> demo@asiftraders.com</p>
+                <p><span className="font-medium">Password:</span> demo123</p>
+              </div>
+            </div>
           </div>
 
+          {/* Sign Up Link */}
+          <p className="text-center text-text-secondary mt-6">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="text-terracotta font-semibold hover:underline">
+              Create Account
+            </Link>
+          </p>
+
           {/* Terms */}
-          <p className="text-xs text-text-secondary text-center mt-6">
+          <p className="text-xs text-text-secondary text-center mt-4">
             By continuing, you agree to our{' '}
             <Link href="/terms" className="text-terracotta hover:underline">Terms of Service</Link>
             {' '}and{' '}

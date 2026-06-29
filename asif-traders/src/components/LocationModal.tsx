@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from '@/context/LocationContext';
 import { MapPin, X, Check, Truck } from 'lucide-react';
 
@@ -9,6 +9,10 @@ export default function LocationModal() {
   const [pincode, setPincode] = useState('');
   const [error, setError] = useState('');
   const [isChecking, setIsChecking] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setShowLocationModal(false);
+  }, [setShowLocationModal]);
 
   useEffect(() => {
     if (showLocationModal) {
@@ -20,6 +24,17 @@ export default function LocationModal() {
       document.body.style.overflow = '';
     };
   }, [showLocationModal]);
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showLocationModal) {
+        handleClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showLocationModal, handleClose]);
 
   const handlePincodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,88 +89,57 @@ export default function LocationModal() {
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 z-50"
-        onClick={() => setShowLocationModal(false)}
+        onClick={handleClose}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-x-4 bottom-0 lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-full lg:max-w-md z-50">
-        <div className="bg-white rounded-t-3xl lg:rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
+      {/* Modal - Responsive for mobile */}
+      <div className="fixed inset-x-0 bottom-0 lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-full lg:max-w-lg z-50 max-h-[85vh] flex flex-col">
+        <div className="bg-white rounded-t-3xl lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-full">
           {/* Gradient Header with Illustration */}
-          <div className="location-gradient p-6 pb-8 relative overflow-hidden">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <svg viewBox="0 0 200 100" className="w-full h-full">
-                <circle cx="20" cy="80" r="30" fill="white"/>
-                <circle cx="180" cy="20" r="40" fill="white"/>
-                <rect x="100" y="50" width="60" height="40" rx="5" fill="white"/>
-              </svg>
-            </div>
-
-            {/* Animated Truck Icon */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                <div className="truck-bounce">
-                  <Truck className="w-10 h-10 text-white" />
-                </div>
-              </div>
-              <button
-                onClick={() => setShowLocationModal(false)}
-                className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
-            </div>
+          <div className="location-gradient p-4 sm:p-6 pb-6 relative overflow-hidden flex-shrink-0">
+            {/* Close Button - Fixed position */}
+            <button
+              onClick={handleClose}
+              className="absolute top-3 right-3 lg:top-4 lg:right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors z-20"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
 
             {/* Header Text */}
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <div className="relative z-10 pr-10">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
                 Select Delivery Location
               </h2>
-              <p className="text-white/80 text-sm">
+              <p className="text-white/80 text-xs sm:text-sm">
                 Check delivery availability in your area
               </p>
             </div>
-
-            {/* Illustration */}
-            <div className="absolute right-0 bottom-0 opacity-20">
-              <svg viewBox="0 0 150 100" className="w-32 h-24">
-                {/* Delivery Truck Illustration */}
-                <rect x="10" y="40" width="80" height="40" rx="5" fill="white"/>
-                <rect x="90" y="50" width="50" height="30" rx="3" fill="white"/>
-                <circle cx="35" cy="85" r="12" fill="white"/>
-                <circle cx="115" cy="85" r="12" fill="white"/>
-                <rect x="95" y="55" width="20" height="15" rx="2" fill="white"/>
-                {/* Construction Materials */}
-                <rect x="20" y="45" width="15" height="30" fill="#E85D04"/>
-                <rect x="40" y="50" width="15" height="25" fill="#D35400"/>
-                <rect x="60" y="48" width="12" height="27" fill="#27AE60"/>
-              </svg>
-            </div>
           </div>
 
-          {/* Content */}
-          <div className="p-6">
+          {/* Content - Scrollable */}
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1">
             {/* Current Location Info */}
             {currentLocation && (
-              <div className="mb-6 p-4 bg-[#27AE60]/10 rounded-2xl border border-[#27AE60]/20">
+              <div className="mb-4 p-3 sm:p-4 bg-[#27AE60]/10 rounded-xl border border-[#27AE60]/20">
                 <div className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-[#27AE60]" />
-                  <div>
-                    <p className="font-semibold text-[#27AE60]">Currently delivering to:</p>
-                    <p className="text-sm text-[#2C3E50]">{currentLocation.area}, {currentLocation.city} ({currentLocation.pincode})</p>
+                  <Check className="w-5 h-5 text-[#27AE60] flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#27AE60] text-sm">Currently delivering to:</p>
+                    <p className="text-sm text-[#2C3E50] truncate">{currentLocation.area}, {currentLocation.city} ({currentLocation.pincode})</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Pincode Form - Modern Design */}
-            <form onSubmit={handlePincodeSubmit} className="mb-6">
+            {/* Pincode Form - Mobile Optimized */}
+            <form onSubmit={handlePincodeSubmit} className="mb-4">
               <label className="block text-sm font-semibold text-[#2C3E50] mb-2">
                 Enter your pincode
               </label>
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#E85D04]" />
+              <div className="flex gap-2 sm:gap-3">
+                <div className="relative flex-1 min-w-0">
+                  <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#E85D04]" />
                   <input
                     type="text"
                     value={pincode}
@@ -165,14 +149,14 @@ export default function LocationModal() {
                       setError('');
                     }}
                     placeholder="e.g. 400708"
-                    className="w-full pl-12 pr-4 py-4 border-2 border-[#E5E5E5] rounded-2xl focus:border-[#E85D04] focus:outline-none transition-all text-lg tracking-widest shadow-sm"
+                    className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border-2 border-[#E5E5E5] rounded-xl sm:rounded-2xl focus:border-[#E85D04] focus:outline-none transition-all text-base sm:text-lg tracking-widest shadow-sm"
                     maxLength={6}
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isChecking || pincode.length !== 6}
-                  className="px-6 py-4 bg-[#E85D04] text-white font-bold rounded-2xl hover:bg-[#D35400] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="px-4 sm:px-6 py-3 sm:py-4 bg-[#E85D04] text-white font-bold rounded-xl sm:rounded-2xl hover:bg-[#D35400] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex-shrink-0"
                 >
                   {isChecking ? (
                     <span className="flex items-center gap-2">
@@ -180,7 +164,6 @@ export default function LocationModal() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Check
                     </span>
                   ) : (
                     'Check'
@@ -188,23 +171,27 @@ export default function LocationModal() {
                 </button>
               </div>
               {error && (
-                <p className="mt-3 text-sm text-red-500 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                  {error}
+                <p className="mt-2 text-sm text-red-500 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0"></span>
+                  <span className="truncate">{error}</span>
                 </p>
               )}
             </form>
 
-            {/* Quick Select - Modern Pill Design */}
+            {/* Quick Select - Mobile Optimized */}
             <div>
-              <p className="text-sm font-semibold text-[#2C3E50] mb-3">Quick select:</p>
+              <p className="text-sm font-semibold text-[#2C3E50] mb-2 sm:mb-3">Quick select:</p>
               <div className="flex flex-wrap gap-2">
                 {quickPincodes.map((pc) => (
                   <button
                     key={pc.pincode}
                     onClick={() => handleQuickSelect(pc.pincode)}
                     disabled={isChecking}
-                    className={`pill ${pincode === pc.pincode ? 'pill-active' : ''}`}
+                    className={`px-3 py-2 text-xs sm:text-sm rounded-lg border-2 transition-all ${
+                      pincode === pc.pincode
+                        ? 'bg-[#E85D04] text-white border-[#E85D04]'
+                        : 'bg-white text-[#2C3E50] border-[#E5E5E5] hover:border-[#E85D04]'
+                    }`}
                   >
                     {pc.area} ({pc.pincode})
                   </button>
@@ -213,12 +200,12 @@ export default function LocationModal() {
             </div>
 
             {/* Delivery Info */}
-            <div className="mt-6 p-4 bg-[#F5F5F5] rounded-2xl">
+            <div className="mt-4 p-3 sm:p-4 bg-[#F5F5F5] rounded-xl">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-[#E85D04]/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Truck className="w-5 h-5 text-[#E85D04]" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#E85D04]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-[#E85D04]" />
                 </div>
-                <div className="text-sm">
+                <div className="text-xs sm:text-sm">
                   <p className="font-semibold text-[#2C3E50]">Delivery Information</p>
                   <p className="text-[#6B6B70]">
                     We deliver to Navi Mumbai, Thane, and nearby areas within 24-48 hours for in-stock items.
@@ -229,10 +216,10 @@ export default function LocationModal() {
           </div>
 
           {/* Footer - Skip Button */}
-          <div className="px-6 pb-6">
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6 flex-shrink-0 border-t border-gray-100 pt-3 sm:pt-4">
             <button
-              onClick={() => setShowLocationModal(false)}
-              className="w-full py-3 text-center font-medium text-[#6B6B70] hover:text-[#E85D04] transition-colors relative group"
+              onClick={handleClose}
+              className="w-full py-2.5 sm:py-3 text-center font-medium text-[#6B6B70] hover:text-[#E85D04] transition-colors relative group"
             >
               Skip for now
               <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[#E85D04] transition-all group-hover:w-full"></span>
