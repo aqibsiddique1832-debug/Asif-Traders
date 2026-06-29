@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/components/Providers";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
-import LocationModal from "@/components/LocationModal";
-import ToastContainer from "@/components/ToastContainer";
+import PublicShell from "@/components/PublicShell";
+import { AdminProvider } from "@/context/AdminContext";
 
 export const metadata: Metadata = {
   title: "ASIF TRADERS - Building Materials Supplier | Cement, Steel, TMT, Pipes, Tiles",
@@ -39,16 +36,11 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body className="min-h-screen flex flex-col bg-warm-white">
-        <Providers>
-          <Header />
-          <main className="flex-1 mobile-padding-bottom">
-            {children}
-          </main>
-          <Footer />
-          <BottomNav />
-          <LocationModal />
-          <ToastContainer />
-        </Providers>
+        <AdminProvider>
+          <Providers>
+            <PublicShell>{children}</PublicShell>
+          </Providers>
+        </AdminProvider>
       </body>
     </html>
   );
