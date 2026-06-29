@@ -356,28 +356,28 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 gap-2 lg:gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6 lg:gap-8">
             {categories.map((category, index) => (
               <Link
                 key={category.slug}
                 href={`/category/${category.slug}`}
-                className="card p-2 lg:p-3 text-center hover:border-terracotta border-2 border-transparent transition-all group overflow-hidden"
+                className="flex flex-col items-center text-center group py-4 transition-all"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-sandstone mb-1.5 lg:mb-2">
+                <div className="relative w-full aspect-square mb-3 flex items-center justify-center">
                   <img
                     src={categoryImages[category.slug]}
                     alt={category.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="max-w-[80%] max-h-[80%] object-contain filter drop-shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-xl"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
                 </div>
-                <h3 className="font-medium text-xs lg:text-sm text-charcoal group-hover:text-terracotta transition-colors line-clamp-1">
+                <h3 className="font-semibold text-sm lg:text-base text-charcoal group-hover:text-terracotta transition-colors mb-1">
                   {category.name}
                 </h3>
-                <p className="text-[10px] lg:text-xs text-text-secondary mt-0.5">{category.productCount}+</p>
+                <p className="text-xs text-text-secondary">{category.productCount}+ Products</p>
               </Link>
             ))}
           </div>

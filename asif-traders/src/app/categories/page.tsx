@@ -36,34 +36,30 @@ export default function CategoriesPage() {
         </div>
       </section>
 
-      {/* Categories Grid */}
-      <section className="section bg-sandstone/50">
+      {/* Categories Grid - Floating Product Style */}
+      <section className="py-12 lg:py-16 bg-white">
         <div className="container">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-9 gap-6 lg:gap-8">
             {categories.map((category, index) => (
               <Link
                 key={category.slug}
                 href={`/category/${category.slug}`}
-                className="card p-6 flex items-center gap-6 hover:border-terracotta border-2 border-transparent transition-all group overflow-hidden"
+                className="flex flex-col items-center text-center group py-4 transition-all"
               >
-                <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-sandstone flex-shrink-0">
+                <div className="relative w-full aspect-square mb-4 flex items-center justify-center">
                   <img
                     src={categoryImages[category.slug]}
                     alt={category.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="max-w-[85%] max-h-[85%] object-contain filter drop-shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-xl"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-xl font-bold text-charcoal group-hover:text-terracotta transition-colors" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-                    {category.name}
-                  </h2>
-                  <p className="text-sm text-text-secondary mt-1 line-clamp-2">{category.description}</p>
-                  <p className="text-xs text-amber font-semibold mt-2">{category.productCount}+ Products</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-text-secondary group-hover:text-terracotta transition-colors flex-shrink-0" />
+                <h2 className="font-semibold text-sm lg:text-base text-charcoal group-hover:text-terracotta transition-colors mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  {category.name}
+                </h2>
+                <p className="text-xs lg:text-sm text-text-secondary">{category.productCount}+ Products</p>
               </Link>
             ))}
           </div>
