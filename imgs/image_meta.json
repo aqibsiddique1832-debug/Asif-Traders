@@ -700,5 +700,57 @@
       "recommend": true,
       "error": ""
     }
+  },
+  {
+    "query": "High-quality image of cement bags for building materials e-commerce",
+    "image_info": {
+      "url": "https://www.dwarkeshpolyfab.com/assets/images/industries/cement-industry.webp",
+      "img_format": "WEBP",
+      "mode": "RGB",
+      "file_size": 77254,
+      "width": 1113,
+      "height": 670,
+      "total_pixels": 745710,
+      "basic_score": 0.9147231007794274,
+      "file_name": "industrial-cement-bags-construction-india.jpg"
+    },
+    "llm_score": {
+      "success": true,
+      "relevance_score": 78.0,
+      "clarity_score": 64.0,
+      "watermark_score": 72.0,
+      "overall_score": 69.0,
+      "explanation": "The image accurately depicts cement bags in an Indian industrial context. Resolution is adequate, though the industrial environment adds visual noise.",
+      "file_name": "industrial-cement-bags-construction-india.jpg",
+      "caption": "A 50kg bag of ultra-strength cement positioned in front of a busy manufacturing facility with workers and forklifts.",
+      "recommend": true,
+      "error": ""
+    }
+  },
+  {
+    "query": "High-quality image of cement bags for building materials e-commerce",
+    "image_info": {
+      "url": "https://constructionestimatorindia.com/wp-content/uploads/2026/03/Best-Cement-for-Roofing-in-India-6.jpg",
+      "img_format": "JPEG",
+      "mode": "RGB",
+      "file_size": 226998,
+      "width": 1280,
+      "height": 720,
+      "total_pixels": 921600,
+      "basic_score": 0.9417506821867461,
+      "file_name": "indian-construction-cement-bags.jpg"
+    },
+    "llm_score": {
+      "success": true,
+      "relevance_score": 82.0,
+      "clarity_score": 74.0,
+      "watermark_score": 48.0,
+      "overall_score": 68.0,
+      "explanation": "The image features prominent Indian cement brands and fits the query well. However, a visible central watermark and outdoor lighting limit its professional e-commerce appeal.",
+      "file_name": "indian-construction-cement-bags.jpg",
+      "caption": "Pallets of UltraTech, ACC, and Ambuja cement bags at an Indian construction site with rebar and a mixer.",
+      "recommend": true,
+      "error": ""
+    }
   }
 ]
