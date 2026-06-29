@@ -285,15 +285,36 @@ export default function HomePage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Hero Section - Reduced Height */}
-      <section className="relative bg-charcoal overflow-hidden">
-        {/* Construction Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
+      {/* Hero Section - Improved with Construction Theme */}
+      <section className="relative bg-[#2C3E50] overflow-hidden">
+        {/* Construction Background Illustration */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Sky gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#2C3E50] via-[#34495E] to-[#2C3E50]" />
+
+          {/* Construction site illustration */}
+          <div className="absolute right-0 top-0 w-1/2 h-full opacity-10">
+            <svg viewBox="0 0 400 300" className="w-full h-full">
+              {/* Building structure */}
+              <rect x="250" y="100" width="80" height="150" fill="white"/>
+              <rect x="260" y="110" width="20" height="20" fill="#E85D04"/>
+              <rect x="290" y="110" width="20" height="20" fill="#E85D04"/>
+              <rect x="260" y="140" width="20" height="20" fill="#E85D04"/>
+              <rect x="290" y="140" width="20" height="20" fill="#E85D04"/>
+              <rect x="260" y="170" width="20" height="20" fill="#E85D04"/>
+              <rect x="290" y="170" width="20" height="20" fill="#E85D04"/>
+              <rect x="280" y="200" width="30" height="50" fill="#2C3E50"/>
+              {/* Crane */}
+              <line x1="200" y1="50" x2="350" y2="50" stroke="white" strokeWidth="3"/>
+              <line x1="200" y1="50" x2="200" y2="250" stroke="white" strokeWidth="3"/>
+              <line x1="350" y1="50" x2="350" y2="100" stroke="white" strokeWidth="2"/>
+              <rect x="340" y="90" width="20" height="30" fill="white"/>
+            </svg>
+          </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-charcoal via-charcoal/95 to-charcoal/80" />
+
+        {/* Dark gradient overlay - bottom heavy */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20" />
 
         <div className="container py-8 lg:py-12 xl:py-16 relative">
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
@@ -301,45 +322,46 @@ export default function HomePage() {
               <span className="badge badge-amber mb-3 lg:mb-4 inline-block text-xs lg:text-sm">
                 {heroBanners[currentBanner].badge}
               </span>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 lg:mb-3 leading-tight" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 lg:mb-3 leading-tight hero-text-shadow transition-all duration-500" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
                 {heroBanners[currentBanner].title}
               </h1>
-              <p className="text-base lg:text-lg text-gray-300 mb-1 lg:mb-2 font-medium">
+              <p className="text-base lg:text-lg text-gray-200 mb-1 lg:mb-2 font-medium">
                 {heroBanners[currentBanner].subtitle}
               </p>
-              <p className="text-sm lg:text-base text-gray-400 mb-4 lg:mb-6 max-w-lg">
+              <p className="text-sm lg:text-base text-gray-300 mb-4 lg:mb-6 max-w-lg">
                 {heroBanners[currentBanner].description}
               </p>
               <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
-                <Link href={heroBanners[currentBanner].ctaLink} className="btn-primary flex items-center justify-center gap-2 py-2.5 lg:py-3 text-sm lg:text-base">
+                <Link href={heroBanners[currentBanner].ctaLink} className="btn-primary flex items-center justify-center gap-2 py-2.5 lg:py-3 text-sm lg:text-base group">
                   {heroBanners[currentBanner].cta}
-                  <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
+                  <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-1" />
                 </Link>
-                <a href="tel:+917977572727" className="btn-secondary border-amber text-amber hover:bg-amber hover:text-charcoal flex items-center justify-center gap-2 py-2.5 lg:py-3 text-sm lg:text-base">
+                <a href="tel:+917977572727" className="btn-secondary border-amber text-amber hover:bg-amber hover:text-[#2C3E50] flex items-center justify-center gap-2 py-2.5 lg:py-3 text-sm lg:text-base">
                   <Phone className="w-4 h-4 lg:w-5 lg:h-5" />
                   Call Now
                 </a>
               </div>
             </div>
 
-            {/* Hero Visual */}
+            {/* Hero Visual - Construction Materials */}
             <div className="relative hidden lg:block">
-              <div className="absolute -top-8 -right-8 w-64 h-64 bg-terracotta/20 rounded-full blur-3xl" />
-              <div className="relative bg-gradient-to-br from-terracotta/20 to-amber/10 rounded-2xl p-6 aspect-[4/3] flex items-center justify-center">
+              <div className="absolute -top-8 -right-8 w-64 h-64 bg-[#E85D04]/20 rounded-full blur-3xl" />
+              <div className="relative bg-gradient-to-br from-[#E85D04]/20 to-amber/10 rounded-2xl p-6 aspect-[4/3] flex items-center justify-center overflow-hidden">
+                {/* Construction Materials Grid */}
                 <div className="grid grid-cols-3 gap-4 w-full max-w-xs">
-                  <div className="bg-white/10 rounded-xl p-4 flex flex-col items-center justify-center">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center hover:bg-white/20 transition-all hover:-translate-y-1">
                     <Building2 className="w-8 h-8 text-amber mb-2" />
                     <span className="text-xs text-white/80">Cement</span>
                   </div>
-                  <div className="bg-white/10 rounded-xl p-4 flex flex-col items-center justify-center">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center hover:bg-white/20 transition-all hover:-translate-y-1">
                     <Package className="w-8 h-8 text-amber mb-2" />
                     <span className="text-xs text-white/80">Steel</span>
                   </div>
-                  <div className="bg-white/10 rounded-xl p-4 flex flex-col items-center justify-center">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center hover:bg-white/20 transition-all hover:-translate-y-1">
                     <TruckIcon className="w-8 h-8 text-amber mb-2" />
                     <span className="text-xs text-white/80">Delivery</span>
                   </div>
-                  <div className="bg-white/10 rounded-xl p-4 flex flex-col items-center justify-center col-span-3">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center col-span-3 hover:bg-white/20 transition-all">
                     <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>9 Categories</span>
                     <span className="text-xs text-gray-300">Everything for Construction</span>
                   </div>
@@ -348,15 +370,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Banner Indicators */}
+          {/* Banner Indicators - Larger dots, orange active state */}
           <div className="flex gap-2 mt-6 lg:absolute lg:bottom-6 lg:left-1/2 lg:-translate-x-1/2">
             {heroBanners.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentBanner(index)}
-                className={`w-2 h-2 lg:w-3 lg:h-3 rounded-full transition-all ${
-                  index === currentBanner ? 'bg-amber w-6 lg:w-8' : 'bg-white/30 hover:bg-white/50'
+                className={`hero-dot transition-all duration-300 ${
+                  index === currentBanner ? 'hero-dot-active' : 'bg-white/30 hover:bg-white/50'
                 }`}
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
@@ -417,7 +440,7 @@ export default function HomePage() {
       </section>
 
       {/* Quick Quote Banner */}
-      <section className="py-4 lg:py-5 bg-gradient-to-r from-terracotta to-terracotta-dark">
+      <section className="py-4 lg:py-5 bg-gradient-to-r from-[#E85D04] to-[#D35400]">
         <div className="container">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-white">
             <div className="flex items-center gap-3">
@@ -429,7 +452,7 @@ export default function HomePage() {
                 <p className="text-white/80 text-xs lg:text-sm">Tell us what you need, we&apos;ll call you back</p>
               </div>
             </div>
-            <Link href="/quote" className="btn-primary bg-white text-terracotta hover:bg-gray-100 py-2 px-4 text-sm">
+            <Link href="/quote" className="btn-primary bg-white text-[#E85D04] hover:bg-gray-100 py-2 px-4 text-sm shadow-lg">
               Request Quote
             </Link>
           </div>
@@ -575,7 +598,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-8 lg:py-12 bg-gradient-to-br from-terracotta to-terracotta-dark">
+      <section className="py-8 lg:py-12 bg-gradient-to-br from-[#E85D04] to-[#D35400]">
         <div className="container text-center text-white">
           <h2 className="text-xl lg:text-2xl font-bold mb-2" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
             Ready to Start Your Project?
@@ -584,10 +607,10 @@ export default function HomePage() {
             Get the best prices on quality building materials. Contact us today for a personalized quote.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-2 lg:gap-3">
-            <Link href="/quote" className="btn-primary bg-white text-terracotta hover:bg-gray-100 py-2.5 px-6 text-sm lg:text-base">
+            <Link href="/quote" className="btn-primary bg-white text-[#E85D04] hover:bg-gray-100 py-2.5 px-6 text-sm lg:text-base shadow-lg">
               Get Free Quote
             </Link>
-            <a href="tel:+917977572727" className="btn-secondary border-white text-white hover:bg-white hover:text-terracotta py-2.5 px-6 text-sm lg:text-base">
+            <a href="tel:+917977572727" className="btn-secondary border-white text-white hover:bg-white hover:text-[#E85D04] py-2.5 px-6 text-sm lg:text-base">
               <Phone className="w-4 h-4 lg:w-5 lg:h-5 mr-1.5 inline" />
               Call +91 79775 72727
             </a>

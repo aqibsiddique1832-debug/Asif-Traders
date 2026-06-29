@@ -14,11 +14,17 @@ export default function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-3 lg:mb-4">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-terracotta to-terracotta-dark rounded-xl flex items-center justify-center shadow-md">
-                <svg viewBox="0 0 32 32" className="w-7 h-7 lg:w-8 lg:h-8 text-white" fill="currentColor">
-                  {/* Modern AT Logo */}
-                  <path d="M4 24V8h2.5l8 12 8-12H25v16h-2.5V13l-7 10.5L9 13v11H4z" fill="white"/>
-                  <rect x="14" y="18" width="4" height="6" fill="white" opacity="0.7"/>
+              <div className="relative w-10 h-10 lg:w-12 lg:h-12">
+                {/* Orange circle background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#E85D04] to-[#D35400] rounded-full shadow-lg"></div>
+                {/* Overlapping arcs SVG */}
+                <svg viewBox="0 0 48 48" className="absolute inset-0 w-full h-full">
+                  {/* Dark Charcoal arc on top */}
+                  <path d="M24 4 A20 20 0 0 1 44 24" stroke="#2C3E50" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                  {/* Forest Green arc on bottom */}
+                  <path d="M4 24 A20 20 0 0 1 24 44" stroke="#27AE60" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                  {/* AT text in white */}
+                  <text x="24" y="30" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" fontFamily="'Barlow Condensed', sans-serif">AT</text>
                 </svg>
               </div>
               <div>
@@ -165,12 +171,12 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* WhatsApp Float Button - Positioned above bottom nav */}
+      {/* WhatsApp Float Button - Positioned above bottom nav with pulse animation */}
       <a
         href="https://wa.me/917977572727?text=Hi,%20I%20want%20a%20quote%20for%20building%20materials%20from%20ASIF%20TRADERS."
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-20 lg:bottom-6 right-4 w-12 h-12 lg:w-14 lg:h-14 bg-success rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-40"
+        className="fixed bottom-20 lg:bottom-6 right-4 w-12 h-12 lg:w-14 lg:h-14 bg-[#27AE60] rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-40 whatsapp-pulse"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
         aria-label="Chat on WhatsApp"
       >

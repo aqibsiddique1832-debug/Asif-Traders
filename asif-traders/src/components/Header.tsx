@@ -62,13 +62,19 @@ export default function Header() {
               <Menu className="w-5 h-5 text-charcoal" />
             </button>
 
-            {/* Premium Logo */}
+            {/* Premium Logo - New AT Design */}
             <Link href="/" className="flex items-center gap-2 lg:gap-3">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-terracotta to-terracotta-dark rounded-xl flex items-center justify-center shadow-md">
-                <svg viewBox="0 0 32 32" className="w-7 h-7 lg:w-8 lg:h-8 text-white" fill="currentColor">
-                  {/* Modern AT Logo */}
-                  <path d="M4 24V8h2.5l8 12 8-12H25v16h-2.5V13l-7 10.5L9 13v11H4z" fill="white"/>
-                  <rect x="14" y="18" width="4" height="6" fill="white" opacity="0.7"/>
+              <div className="relative w-10 h-10 lg:w-12 lg:h-12">
+                {/* Orange circle background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#E85D04] to-[#D35400] rounded-full shadow-lg"></div>
+                {/* Overlapping arcs SVG */}
+                <svg viewBox="0 0 48 48" className="absolute inset-0 w-full h-full">
+                  {/* Dark Charcoal arc on top */}
+                  <path d="M24 4 A20 20 0 0 1 44 24" stroke="#2C3E50" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                  {/* Forest Green arc on bottom */}
+                  <path d="M4 24 A20 20 0 0 1 24 44" stroke="#27AE60" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                  {/* AT text in white */}
+                  <text x="24" y="30" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" fontFamily="'Barlow Condensed', sans-serif">AT</text>
                 </svg>
               </div>
               <div>
@@ -240,10 +246,14 @@ export default function Header() {
           <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 shadow-2xl animate-slide-in-right lg:hidden overflow-y-auto">
             <div className="p-4 border-b border-sandstone flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-terracotta to-terracotta-dark rounded-xl flex items-center justify-center shadow-md">
-                  <svg viewBox="0 0 32 32" className="w-7 h-7 text-white" fill="currentColor">
-                    <path d="M4 24V8h2.5l8 12 8-12H25v16h-2.5V13l-7 10.5L9 13v11H4z" fill="white"/>
-                    <rect x="14" y="18" width="4" height="6" fill="white" opacity="0.7"/>
+                <div className="relative w-10 h-10">
+                  {/* Orange circle background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#E85D04] to-[#D35400] rounded-full shadow-lg"></div>
+                  {/* Overlapping arcs SVG */}
+                  <svg viewBox="0 0 48 48" className="absolute inset-0 w-full h-full">
+                    <path d="M24 4 A20 20 0 0 1 44 24" stroke="#2C3E50" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                    <path d="M4 24 A20 20 0 0 1 24 44" stroke="#27AE60" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                    <text x="24" y="30" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" fontFamily="'Barlow Condensed', sans-serif">AT</text>
                   </svg>
                 </div>
                 <span className="text-lg font-bold text-charcoal" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
