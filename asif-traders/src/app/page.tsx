@@ -28,82 +28,17 @@ import {
   Package,
 } from 'lucide-react';
 
-// Category icons
-const categoryIcons: Record<string, React.ReactNode> = {
-  'cement': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="8" y="16" width="32" height="24" rx="2" fill="currentColor" opacity="0.2"/>
-      <rect x="8" y="16" width="32" height="8" fill="currentColor" opacity="0.4"/>
-      <rect x="12" y="24" width="8" height="8" fill="currentColor" opacity="0.6"/>
-      <rect x="28" y="24" width="8" height="8" fill="currentColor" opacity="0.6"/>
-    </svg>
-  ),
-  'tmt-bars': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="20" width="36" height="8" rx="2" fill="currentColor"/>
-      <rect x="8" y="22" width="32" height="4" rx="1" fill="currentColor" opacity="0.6"/>
-      <circle cx="8" cy="24" r="2" fill="currentColor"/>
-      <circle cx="40" cy="24" r="2" fill="currentColor"/>
-    </svg>
-  ),
-  'structural-steel': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 12L24 4L40 12V36L24 44L8 36V12Z" fill="currentColor" opacity="0.3"/>
-      <path d="M8 12L24 4L40 12V36L24 44L8 36V12Z" stroke="currentColor" strokeWidth="2"/>
-      <path d="M24 4V44M8 12L40 36M40 12L8 36" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  'gi-pipes': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="24" cy="10" rx="12" ry="4" fill="currentColor" opacity="0.3"/>
-      <rect x="12" y="10" width="24" height="28" fill="currentColor" opacity="0.3"/>
-      <ellipse cx="24" cy="38" rx="12" ry="4" fill="currentColor" opacity="0.5"/>
-      <ellipse cx="24" cy="10" rx="12" ry="4" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  'ms-pipes': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="24" cy="10" rx="10" ry="4" fill="currentColor" opacity="0.3"/>
-      <rect x="14" y="10" width="20" height="28" fill="currentColor" opacity="0.3"/>
-      <ellipse cx="24" cy="38" rx="10" ry="4" fill="currentColor" opacity="0.5"/>
-      <ellipse cx="24" cy="10" rx="10" ry="4" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  'tiles': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="6" width="16" height="16" rx="1" fill="currentColor" opacity="0.3"/>
-      <rect x="26" y="6" width="16" height="16" rx="1" fill="currentColor" opacity="0.5"/>
-      <rect x="6" y="26" width="16" height="16" rx="1" fill="currentColor" opacity="0.5"/>
-      <rect x="26" y="26" width="16" height="16" rx="1" fill="currentColor" opacity="0.3"/>
-      <rect x="6" y="6" width="16" height="16" rx="1" stroke="currentColor" strokeWidth="2"/>
-      <rect x="26" y="6" width="16" height="16" rx="1" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  'aac-blocks': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="14" width="36" height="20" rx="2" fill="currentColor" opacity="0.3"/>
-      <rect x="6" y="14" width="36" height="6" fill="currentColor" opacity="0.5"/>
-      <line x1="18" y1="20" x2="18" y2="34" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-      <line x1="30" y1="20" x2="30" y2="34" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-      <rect x="6" y="14" width="36" height="20" rx="2" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  'cement-sheets': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 32L12 16L20 32L28 16L36 32L44 16V40H4V32Z" fill="currentColor" opacity="0.3"/>
-      <path d="M4 32L12 16L20 32L28 16L36 32L44 16V40H4V32Z" stroke="currentColor" strokeWidth="2"/>
-    </svg>
-  ),
-  'sand-aggregate': (
-    <svg className="w-10 h-10 lg:w-12 lg:h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 36C8 36 12 28 24 28C36 28 40 36 40 36V40H8V36Z" fill="currentColor" opacity="0.4"/>
-      <circle cx="16" cy="24" r="3" fill="currentColor" opacity="0.6"/>
-      <circle cx="24" cy="20" r="4" fill="currentColor" opacity="0.6"/>
-      <circle cx="32" cy="24" r="3" fill="currentColor" opacity="0.6"/>
-      <circle cx="20" cy="30" r="2" fill="currentColor" opacity="0.4"/>
-      <circle cx="28" cy="30" r="2" fill="currentColor" opacity="0.4"/>
-    </svg>
-  ),
+// Category images - real product photographs
+const categoryImages: Record<string, string> = {
+  'cement': '/images/categories/cement.jpg',
+  'tmt-bars': '/images/categories/tmt-bars.jpg',
+  'structural-steel': '/images/categories/structural-steel.jpg',
+  'gi-pipes': '/images/categories/gi-pipes.jpg',
+  'ms-pipes': '/images/categories/ms-pipes.jpg',
+  'tiles': '/images/categories/tiles.jpg',
+  'aac-blocks': '/images/categories/aac-blocks.jpg',
+  'cement-sheets': '/images/categories/cement-sheets.jpg',
+  'sand-aggregate': '/images/categories/sand-aggregate.jpg',
 };
 
 function ProductCard({ product, index }: { product: typeof products[0]; index: number }) {
@@ -129,11 +64,14 @@ function ProductCard({ product, index }: { product: typeof products[0]; index: n
     >
       <Link href={`/product/${product.slug}/`}>
         <div className="relative aspect-square bg-sandstone rounded-lg mb-2 lg:mb-3 overflow-hidden">
-          <div className="absolute inset-0 img-placeholder flex items-center justify-center text-terracotta/30">
-            {categoryIcons[product.categorySlug] || (
-              <div className="w-14 h-14 lg:w-16 lg:h-16 bg-sandstone rounded-full" />
-            )}
-          </div>
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
           {discount > 0 && (
             <span className="absolute top-2 left-2 badge badge-amber text-xs">
               {discount}% OFF
@@ -423,11 +361,18 @@ export default function HomePage() {
               <Link
                 key={category.slug}
                 href={`/category/${category.slug}`}
-                className="card p-2 lg:p-3 text-center hover:border-terracotta border-2 border-transparent transition-all group"
+                className="card p-2 lg:p-3 text-center hover:border-terracotta border-2 border-transparent transition-all group overflow-hidden"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="w-10 h-10 lg:w-14 lg:h-14 mx-auto mb-1.5 lg:mb-2 text-terracotta group-hover:scale-110 transition-transform">
-                  {categoryIcons[category.slug]}
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-sandstone mb-1.5 lg:mb-2">
+                  <img
+                    src={categoryImages[category.slug]}
+                    alt={category.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
                 </div>
                 <h3 className="font-medium text-xs lg:text-sm text-charcoal group-hover:text-terracotta transition-colors line-clamp-1">
                   {category.name}
