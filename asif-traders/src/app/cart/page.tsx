@@ -26,11 +26,11 @@ export default function CartPage() {
       variant,
       subtotal: variant ? variant.sellingPrice * item.quantity : 0,
     };
-  }).filter(item => item.product && item.variant);
+  }).filter((item): item is typeof item & { variant: NonNullable<typeof item.variant> } => item.product !== undefined && item.variant !== undefined);
 
   const totalAmount = cartDetails.reduce((sum, item) => sum + item.subtotal, 0);
   const totalMRP = cartDetails.reduce((sum, item) => {
-    const mrp = item.variant?.mrp || 0;
+    const mrp = item.variant.mrp || 0;
     return sum + mrp * item.quantity;
   }, 0);
   const totalSavings = totalMRP - totalAmount;
@@ -100,7 +100,7 @@ export default function CartPage() {
                         </div>
                         <button
                           onClick={() => {
-                            removeFromCart(item.productId, item.variant);
+                            removeFromCart(item.productId, item.variant.size);
                             showToast('Item removed from cart', 'info');
                           }}
                           className="p-2 hover:bg-error/10 rounded-lg transition-colors"
@@ -113,14 +113,14 @@ export default function CartPage() {
                         {/* Quantity */}
                         <div className="flex items-center border border-sandstone rounded-lg">
                           <button
-                            onClick={() => updateQuantity(item.productId, item.variant, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.productId, item.variant.size, item.quantity - 1)}
                             className="p-2 hover:bg-sandstone transition-colors"
                           >
                             <Minus className="w-4 h-4" />
                           </button>
                           <span className="w-12 text-center font-mono font-semibold">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.productId, item.variant, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.productId, item.variant.size, item.quantity + 1)}
                             className="p-2 hover:bg-sandstone transition-colors"
                           >
                             <Plus className="w-4 h-4" />
