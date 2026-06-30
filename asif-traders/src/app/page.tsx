@@ -229,8 +229,8 @@ export default function HomePage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Hero Section - Figma Style with Corner Brackets */}
-      <section className="relative bg-[#2C3E50] overflow-hidden">
+      {/* Hero Section - Rounded Corners Style */}
+      <section className="relative bg-[#2C3E50] overflow-hidden rounded-none lg:rounded-2xl mx-0 lg:mx-4">
         {/* Construction Background Illustration */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Sky gradient */}
@@ -259,18 +259,6 @@ export default function HomePage() {
 
         {/* Dark gradient overlay - bottom heavy */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20" />
-
-        {/* Figma Style Corner Brackets */}
-        <div className="absolute top-4 left-4 w-10 h-10 border-l-2 border-t-2 border-[#E85D04] z-10" />
-        <div className="absolute top-4 right-4 w-10 h-10 border-r-2 border-t-2 border-[#E85D04] z-10" />
-        <div className="absolute bottom-4 left-4 w-10 h-10 border-l-2 border-b-2 border-[#E85D04] z-10" />
-        <div className="absolute bottom-4 right-4 w-10 h-10 border-r-2 border-b-2 border-[#E85D04] z-10" />
-
-        {/* Inner Corner Accents */}
-        <div className="absolute top-6 left-6 w-6 h-6 border-l border-t border-[#E85D04]/50 z-10" />
-        <div className="absolute top-6 right-6 w-6 h-6 border-r border-t border-[#E85D04]/50 z-10" />
-        <div className="absolute bottom-6 left-6 w-6 h-6 border-l border-b border-[#E85D04]/50 z-10" />
-        <div className="absolute bottom-6 right-6 w-6 h-6 border-r border-b border-[#E85D04]/50 z-10" />
 
         <div className="container py-8 lg:py-12 xl:py-16 relative">
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
