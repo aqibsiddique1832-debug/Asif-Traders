@@ -23,7 +23,9 @@ export default function PublicShell({ children }: { children: ReactNode }) {
   return (
     <>
       <Header />
-      <main className="flex-1 mobile-padding-bottom">{children}</main>
+      <main id="main-content" className="flex-1 mobile-padding-bottom" tabIndex={-1}>
+        {children}
+      </main>
       <Footer />
       <BottomNav />
       <LocationModal />

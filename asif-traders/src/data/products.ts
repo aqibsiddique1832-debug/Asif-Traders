@@ -22,6 +22,7 @@ export interface Product {
   minOrderQty: number;
   unit: 'bag' | 'ton' | 'piece' | 'sqft' | 'running_ft' | 'per_brass' | 'per_truck' | 'bundle';
   brand?: string;
+  isFeatured?: boolean;
 }
 
 export interface Category {

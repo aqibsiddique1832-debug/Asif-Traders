@@ -20,6 +20,7 @@ const tabs = [
 
 export default function SettingsPage() {
   const { settings, updateSettings, heroSliders, updateHeroSlider, addHeroSlider, deleteHeroSlider, categories, updateCategory } = useAdmin();
+  const s = settings || { phone: '', whatsapp: '', email: '', address: '', socialLinks: { facebook: '', instagram: '', linkedin: '', youtube: '' }, metaTitle: '', metaDescription: '', metaKeywords: '' };
   const [activeTab, setActiveTab] = useState('logo');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -250,7 +251,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
               <input
                 type="text"
-                value={settings.phone}
+                value={s.phone}
                 onChange={(e) => updateSettings({ phone: e.target.value })}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
@@ -259,7 +260,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
               <input
                 type="text"
-                value={settings.whatsapp}
+                value={s.whatsapp}
                 onChange={(e) => updateSettings({ whatsapp: e.target.value })}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
@@ -268,7 +269,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
               <input
                 type="email"
-                value={settings.email}
+                value={s.email}
                 onChange={(e) =>updateSettings({ email: e.target.value })}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
@@ -277,7 +278,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Office Address</label>
               <input
                 type="text"
-                value={settings.address}
+                value={s.address}
                 onChange={(e) => updateSettings({ address: e.target.value })}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
@@ -302,8 +303,8 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
               <input
                 type="url"
-                value={settings.socialLinks.facebook}
-                onChange={(e) => updateSettings({ socialLinks: { ...settings.socialLinks, facebook: e.target.value } })}
+                value={s.socialLinks.facebook}
+                onChange={(e) => updateSettings({ socialLinks: { ...s.socialLinks, facebook: e.target.value } })}
                 placeholder="https://facebook.com/..."
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
@@ -312,8 +313,8 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
               <input
                 type="url"
-                value={settings.socialLinks.instagram}
-                onChange={(e) => updateSettings({ socialLinks: { ...settings.socialLinks, instagram: e.target.value } })}
+                value={s.socialLinks.instagram}
+                onChange={(e) => updateSettings({ socialLinks: { ...s.socialLinks, instagram: e.target.value } })}
                 placeholder="https://instagram.com/..."
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
@@ -322,8 +323,8 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
               <input
                 type="url"
-                value={settings.socialLinks.linkedin}
-                onChange={(e) => updateSettings({ socialLinks: { ...settings.socialLinks, linkedin: e.target.value } })}
+                value={s.socialLinks.linkedin}
+                onChange={(e) => updateSettings({ socialLinks: { ...s.socialLinks, linkedin: e.target.value } })}
                 placeholder="https://linkedin.com/..."
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
@@ -332,8 +333,8 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">YouTube</label>
               <input
                 type="url"
-                value={settings.socialLinks.youtube}
-                onChange={(e) => updateSettings({ socialLinks: { ...settings.socialLinks, youtube: e.target.value } })}
+                value={s.socialLinks.youtube}
+                onChange={(e) => updateSettings({ socialLinks: { ...s.socialLinks, youtube: e.target.value } })}
                 placeholder="https://youtube.com/..."
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
@@ -358,27 +359,27 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
               <input
                 type="text"
-                value={settings.metaTitle}
+                value={s.metaTitle}
                 onChange={(e) => updateSettings({ metaTitle: e.target.value })}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
-              <p className="text-xs text-gray-400 mt-1">{settings.metaTitle.length}/60 characters</p>
+              <p className="text-xs text-gray-400 mt-1">{s.metaTitle.length}/60 characters</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
               <textarea
-                value={settings.metaDescription}
+                value={s.metaDescription}
                 onChange={(e) => updateSettings({ metaDescription: e.target.value })}
                 rows={4}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"
               />
-              <p className="text-xs text-gray-400 mt-1">{settings.metaDescription.length}/160 characters</p>
+              <p className="text-xs text-gray-400 mt-1">{s.metaDescription.length}/160 characters</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
               <input
                 type="text"
-                value={settings.metaKeywords}
+                value={s.metaKeywords}
                 onChange={(e) => updateSettings({ metaKeywords: e.target.value })}
                 placeholder="cement, TMT bars, steel, pipes..."
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#E85D04] focus:outline-none"

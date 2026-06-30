@@ -40,7 +40,7 @@ const recentQuotes = [
 ];
 
 export default function AdminDashboard() {
-  const { orders, quotes, products } = useAdmin();
+  const { quotes, products } = useAdmin();
 
   const getStatusColor = (status: string) => {
     switch (status) {

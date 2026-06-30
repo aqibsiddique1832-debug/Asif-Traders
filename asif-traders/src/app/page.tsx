@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { categories, products, testimonials, brands } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
+import { useInView, useCountUp } from '@/hooks/useAnimations';
 import {
   ChevronRight,
   Truck,
@@ -231,6 +232,59 @@ const trustBadges = [
   { icon: Truck, text: 'Fast Delivery' },
   { icon: Package, text: 'Bulk Orders' },
 ];
+
+// Animated Stat Card Component
+function AnimatedStatCard({
+  item,
+  delay
+}: {
+  item: {
+    icon: React.ComponentType<{ className?: string }>;
+    title: string;
+    subtitle: string;
+    desc: string;
+    isCounter?: boolean;
+    endValue?: number;
+  };
+  delay: number;
+}) {
+  const { ref, isInView } = useInView();
+  const { count, start, isComplete } = useCountUp(item.endValue || 0, 2000, false);
+
+  useEffect(() => {
+    if (isInView && !isComplete) {
+      const timeout = setTimeout(() => start(), delay);
+      return () => clearTimeout(timeout);
+    }
+  }, [isInView, isComplete, start, delay]);
+
+  return (
+    <div
+      ref={ref}
+      className={`text-center p-3 lg:p-4 bg-white/5 rounded-xl transition-all duration-500 ${
+        isInView
+          ? 'opacity-100 translate-y-0'
+          : 'opacity-0 translate-y-4'
+      }`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <div className="w-10 h-10 lg:w-12 lg:h-12 bg-terracotta/20 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-3 transition-transform hover:scale-110 duration-300">
+        <item.icon className="w-5 h-5 lg:w-6 lg:h-6 text-amber" />
+      </div>
+      <h3 className="text-sm lg:text-base font-bold mb-0.5" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+        {item.isCounter && item.endValue ? (
+          <>
+            {count.toLocaleString()}+
+          </>
+        ) : (
+          item.title
+        )}
+      </h3>
+      <p className="text-xs text-amber/80 mb-1">{item.subtitle}</p>
+      <p className="text-xs lg:text-sm text-gray-400">{item.desc}</p>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [currentBanner, setCurrentBanner] = useState(0);
@@ -524,20 +578,12 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[
-              { icon: Award, title: '15+ Years Experience', desc: 'Trusted service in Navi Mumbai and Thane region' },
-              { icon: Users, title: '5000+ Customers', desc: 'Contractors and builders who rely on us' },
-              { icon: Clock, title: 'Same/Next Day', desc: 'Fast delivery for in-stock items' },
-              { icon: Shield, title: 'Quality Guaranteed', desc: 'Only ISI-marked certified products' },
+              { icon: Award, title: '15+ Years', subtitle: 'Experience', desc: 'Trusted service in Navi Mumbai and Thane region', isCounter: false },
+              { icon: Users, title: '5000+', subtitle: 'Customers', desc: 'Contractors and builders who rely on us', isCounter: true, endValue: 5000 },
+              { icon: Clock, title: '24/7', subtitle: 'Support', desc: 'Always available for your queries', isCounter: false },
+              { icon: Shield, title: '100%', subtitle: 'Quality', desc: 'Only ISI-marked certified products', isCounter: false },
             ].map((item, index) => (
-              <div key={index} className="text-center p-3 lg:p-4 bg-white/5 rounded-xl">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-terracotta/20 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-3">
-                  <item.icon className="w-5 h-5 lg:w-6 lg:h-6 text-amber" />
-                </div>
-                <h3 className="text-sm lg:text-base font-bold mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-                  {item.title}
-                </h3>
-                <p className="text-xs lg:text-sm text-gray-400">{item.desc}</p>
-              </div>
+              <AnimatedStatCard key={index} item={item} delay={index * 150} />
             ))}
           </div>
         </div>

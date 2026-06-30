@@ -6,7 +6,7 @@ import { useAdmin } from '@/context/AdminContext';
 import { Search, Users, Phone, Mail, Building, CreditCard } from 'lucide-react';
 
 export default function CustomersPage() {
-  const { customers } = useAdmin();
+  const { customers = [] } = useAdmin();
   const [search, setSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState('');
 
@@ -63,20 +63,20 @@ export default function CustomersPage() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2 text-gray-600"><Phone className="w-4 h-4" />{cust.phone}</div>
               {cust.email && <div className="flex items-center gap-2 text-gray-600"><Mail className="w-4 h-4" />{cust.email}</div>}
-              <div className="flex items-center gap-2 text-gray-600"><Building className="w-4 h-4" />{cust.pincode}</div>
+              {cust.pincode && <div className="flex items-center gap-2 text-gray-600"><Building className="w-4 h-4" />{cust.pincode}</div>}
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between">
               <div>
                 <p className="text-xs text-gray-500">Orders</p>
-                <p className="font-bold text-[#2C3E50]">{cust.totalOrders}</p>
+                <p className="font-bold text-[#2C3E50]">{cust.totalOrders || 0}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Total Spent</p>
-                <p className="font-bold text-[#2C3E50]">₹{cust.totalSpent.toLocaleString()}</p>
+                <p className="font-bold text-[#2C3E50]">₹{(cust.totalSpent || 0).toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Credit</p>
-                <p className="font-bold text-green-600">₹{cust.creditBalance.toLocaleString()}</p>
+                <p className="font-bold text-green-600">₹{(cust.creditBalance || 0).toLocaleString()}</p>
               </div>
             </div>
           </div>

@@ -13,6 +13,7 @@ export interface Product {
   inStock: boolean;
   minOrderQty: number;
   unit: string;
+  isFeatured: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -100,6 +101,45 @@ export interface Quote {
   notes: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  status: 'new' | 'read' | 'replied';
+  createdAt: string;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  content: string;
+  rating: number;
+  image: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface Setting {
+  phone: string;
+  whatsapp: string;
+  email: string;
+  address: string;
+  socialLinks: {
+    facebook: string;
+    instagram: string;
+    linkedin: string;
+    youtube: string;
+  };
+  metaTitle: string;
+  metaDescription: string;
+  metaKeywords: string;
 }
 
 export interface Pincode {
@@ -202,6 +242,7 @@ export const initialProducts: Product[] = [
     inStock: true,
     minOrderQty: 10,
     unit: 'bag',
+    isFeatured: true,
     createdAt: '2024-01-01',
     updatedAt: '2024-01-15',
   },
@@ -220,6 +261,7 @@ export const initialProducts: Product[] = [
     inStock: true,
     minOrderQty: 50,
     unit: 'piece',
+    isFeatured: true,
     createdAt: '2024-01-01',
     updatedAt: '2024-01-15',
   },
@@ -328,6 +370,81 @@ export const initialQuotes: Quote[] = [
     updatedAt: '2024-01-20T11:00:00',
   },
 ];
+
+export const initialContacts: Contact[] = [
+  {
+    id: 'contact-001',
+    name: 'Vikram Singh',
+    email: 'vikram@email.com',
+    phone: '+91 98765 43215',
+    subject: 'Bulk Order Inquiry',
+    message: 'I need to place a bulk order for my construction project. Please share the price list for cement and steel.',
+    status: 'new',
+    createdAt: '2024-01-20T09:00:00',
+  },
+  {
+    id: 'contact-002',
+    name: 'Priya Patel',
+    email: 'priya@email.com',
+    phone: '+91 98765 43216',
+    subject: 'Delivery Query',
+    message: 'Do you deliver to Panvel area? What are the delivery charges?',
+    status: 'read',
+    createdAt: '2024-01-19T14:30:00',
+  },
+];
+
+export const initialTestimonials: Testimonial[] = [
+  {
+    id: 'test-001',
+    name: 'Rajesh Kumar',
+    role: 'Civil Engineer',
+    company: 'Sharma Construction',
+    content: 'Excellent quality cement and steel at very competitive prices. Their delivery service is prompt and reliable. Highly recommended for bulk purchases.',
+    rating: 5,
+    image: '/images/testimonials/test-1.jpg',
+    active: true,
+    createdAt: '2024-01-15',
+  },
+  {
+    id: 'test-002',
+    name: 'Suresh Patel',
+    role: 'Builder',
+    company: 'Patel Builders',
+    content: 'Best rates in Navi Mumbai for building materials. The team is very helpful and the delivery is always on time.',
+    rating: 5,
+    image: '/images/testimonials/test-2.jpg',
+    active: true,
+    createdAt: '2024-01-10',
+  },
+  {
+    id: 'test-003',
+    name: 'Amit Shah',
+    role: 'Contractor',
+    company: 'Shah Contractors',
+    content: 'Been buying from Asif Traders for 5 years now. Their prices are always competitive and quality is consistent.',
+    rating: 4,
+    image: '/images/testimonials/test-3.jpg',
+    active: true,
+    createdAt: '2024-01-05',
+  },
+];
+
+export const initialSettings: Setting = {
+  phone: '+91 79775 72727',
+  whatsapp: '+91 79775 72727',
+  email: 'info@asiftraders.in',
+  address: 'ASIF TRADERS, Digha, Thane-Belapur Road, Navi Mumbai, Maharashtra',
+  socialLinks: {
+    facebook: 'https://facebook.com/asiftraders',
+    instagram: 'https://instagram.com/asiftraders',
+    linkedin: '',
+    youtube: '',
+  },
+  metaTitle: 'ASIF TRADERS - Building Materials Supplier | Cement, Steel, TMT Bars',
+  metaDescription: 'One-stop shop for cement, steel, TMT bars, pipes, tiles at wholesale prices with fast delivery in Navi Mumbai and Thane.',
+  metaKeywords: 'building materials, cement, TMT bars, steel, pipes, tiles, Navi Mumbai, Thane',
+};
 
 export const initialPincodes: Pincode[] = [
   { id: 'pc-001', code: '400708', area: 'Digha', city: 'Navi Mumbai', state: 'Maharashtra', deliveryCharges: 0, deliveryTime: '24 hours', active: true },

@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { products } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
+import { useRecentlyViewed } from '@/context/RecentlyViewedContext';
 import PriceDisplay, { formatPrice, calculateDiscount } from '@/components/PriceDisplay';
 import WishlistButton from '@/components/WishlistButton';
 import {
@@ -21,6 +22,7 @@ import {
   FileText,
   Tag,
   Heart,
+  History,
 } from 'lucide-react';
 
 interface ProductClientProps {
@@ -32,10 +34,25 @@ export default function ProductClient({ slug }: ProductClientProps) {
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const { location, isLocationSet } = useLocation();
+  const { addToRecentlyViewed, getRecentlyViewedProducts } = useRecentlyViewed();
 
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'description' | 'specifications'>('description');
+
+  // Track this product as viewed
+  useEffect(() => {
+    if (product) {
+      addToRecentlyViewed(product.id);
+    }
+  }, [product, addToRecentlyViewed]);
+
+  // Get recently viewed products (excluding current product)
+  const recentlyViewed = getRecentlyViewedProducts()
+    .filter(item => item.productId !== product?.id)
+    .slice(0, 4)
+    .map(item => products.find(p => p.id === item.productId))
+    .filter(Boolean);
 
   if (!product) {
     return (
@@ -393,6 +410,39 @@ export default function ProductClient({ slug }: ProductClientProps) {
               </h2>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {relatedProducts.map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/product/${p.slug}/`}
+                    className="card p-4 hover:border-terracotta border-2 border-transparent transition-all"
+                  >
+                    <div className="aspect-square bg-sandstone rounded-lg mb-3" />
+                    <h3 className="font-semibold text-charcoal line-clamp-2 text-sm">{p.name}</h3>
+                    <PriceDisplay
+                      price={p.variants[0].sellingPrice}
+                      mrp={p.variants[0].mrp}
+                      size="sm"
+                      layout="inline"
+                      showDiscount={true}
+                      showSavings={false}
+                      className="mt-2"
+                    />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recently Viewed Products */}
+          {recentlyViewed.length > 0 && (
+            <div className="mt-12 pt-8 border-t border-sandstone/30">
+              <div className="flex items-center gap-2 mb-6">
+                <History className="w-5 h-5 text-terracotta" />
+                <h2 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  Recently Viewed
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {recentlyViewed.map((p) => p && (
                   <Link
                     key={p.id}
                     href={`/product/${p.slug}/`}
