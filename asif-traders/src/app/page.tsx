@@ -280,7 +280,7 @@ export default function HomePage() {
                   {heroBanners[currentBanner].cta}
                   <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-1" />
                 </Link>
-                <a href="tel:+917977572727" className="flex items-center justify-center gap-2 py-2.5 lg:py-3 text-sm lg:text-base font-semibold bg-gradient-to-r from-[#E85D04] to-[#D35400] text-white rounded-xl hover:shadow-lg hover:shadow-[#E85D04]/30 transition-all hover:-translate-y-0.5">
+                <a href="tel:+918879149174" className="flex items-center justify-center gap-2 py-2.5 lg:py-3 text-sm lg:text-base font-semibold bg-gradient-to-r from-[#E85D04] to-[#D35400] text-white rounded-xl hover:shadow-lg hover:shadow-[#E85D04]/30 transition-all hover:-translate-y-0.5">
                   <Phone className="w-4 h-4 lg:w-5 lg:h-5" />
                   Call Now
                 </a>
@@ -307,7 +307,7 @@ export default function HomePage() {
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center col-span-3 hover:bg-white/20 transition-all">
                     <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>9 Categories</span>
-                    <span className="text-xs text-gray-300">Everything for Construction</span>
+                    <span className="text-xs text-gray-300">Complete Construction Range</span>
                   </div>
                 </div>
               </div>
@@ -513,14 +513,22 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Customer Feedback */}
       <section className="py-6 lg:py-8 bg-white">
         <div className="container">
           <div className="text-center mb-5 lg:mb-8">
             <h2 className="text-xl lg:text-2xl font-bold text-charcoal mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-              What Our Customers Say
+              Customer Feedback
             </h2>
-            <p className="text-xs lg:text-sm text-text-secondary">Trusted by contractors and builders</p>
+            <p className="text-xs lg:text-sm text-text-secondary">We value your feedback - Share your experience with us</p>
+            <a
+              href="https://wa.me/918879149174?text=Hi,%20I%20want%20to%20share%20my%20feedback%20about%20ASIF%20TRADERS."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 mt-2 text-xs text-terracotta hover:underline"
+            >
+              Share your feedback via WhatsApp
+            </a>
           </div>
 
           <div className="flex gap-3 lg:gap-4 overflow-x-auto pb-4 scroll-x hide-scrollbar -mx-4 px-4">
@@ -531,7 +539,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Brands */}
+      {/* Brands We Supply */}
       <section className="py-6 lg:py-8 bg-sandstone/30">
         <div className="container">
           <p className="text-center text-xs lg:text-sm text-text-secondary mb-4 lg:mb-6 font-medium">Authorized Dealer for Leading Brands</p>
@@ -539,9 +547,9 @@ export default function HomePage() {
             {brands.map((brand) => (
               <div
                 key={brand.name}
-                className="h-8 lg:h-10 px-3 lg:px-4 bg-white rounded-lg flex items-center justify-center shadow-sm"
+                className="h-10 lg:h-12 px-4 lg:px-6 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow grayscale hover:grayscale-0"
               >
-                <span className="font-bold text-charcoal/60 text-xs lg:text-sm">{brand.name}</span>
+                <span className="font-bold text-charcoal/70 text-xs lg:text-sm tracking-wide">{brand.name}</span>
               </div>
             ))}
           </div>
@@ -561,9 +569,9 @@ export default function HomePage() {
             <Link href="/quote" className="btn-primary bg-white text-[#E85D04] hover:bg-gray-100 py-2.5 px-6 text-sm lg:text-base shadow-lg">
               Get Free Quote
             </Link>
-            <a href="tel:+917977572727" className="btn-secondary border-white text-white hover:bg-white hover:text-[#E85D04] py-2.5 px-6 text-sm lg:text-base">
+            <a href="tel:+918879149174" className="btn-secondary border-white text-white hover:bg-white hover:text-[#E85D04] py-2.5 px-6 text-sm lg:text-base">
               <Phone className="w-4 h-4 lg:w-5 lg:h-5 mr-1.5 inline" />
-              Call +91 79775 72727
+              Call +91 88791 49174
             </a>
           </div>
         </div>

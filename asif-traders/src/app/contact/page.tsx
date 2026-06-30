@@ -62,27 +62,28 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-bold text-charcoal mb-1">Call Us</h3>
                     <p className="text-text-secondary mb-2">Mon-Sat: 8:00 AM - 8:00 PM</p>
-                    <a href="tel:+917977572727" className="text-terracotta font-semibold hover:underline text-lg">
-                      +91 79775 72727
+                    <a href="tel:+918879149174" className="text-terracotta font-semibold hover:underline text-lg">
+                      +91 88791 49174
                     </a>
+                    <p className="text-text-secondary text-sm mt-1">Alt: +91 79773 71025, +91 99199 51519</p>
                   </div>
                 </div>
               </div>
 
               {/* WhatsApp */}
-              <div className="card p-6 bg-success/5 border border-success/20">
+              <div className="card p-6 bg-[#25D366]/5 border border-[#25D366]/20">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <MessageCircle className="w-6 h-6 text-success" />
+                  <div className="w-12 h-12 bg-[#25D366]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-6 h-6 text-[#25D366]" />
                   </div>
                   <div>
                     <h3 className="font-bold text-charcoal mb-1">WhatsApp</h3>
                     <p className="text-text-secondary mb-2">Quick responses on WhatsApp</p>
                     <a
-                      href="https://wa.me/917977572727?text=Hi,%20I%20want%20to%20enquire%20about%20building%20materials%20from%20ASIF%20TRADERS."
+                      href="https://wa.me/918879149174?text=Hi,%20I%20want%20to%20enquire%20about%20building%20materials%20from%20ASIF%20TRADERS."
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-success font-semibold hover:underline"
+                      className="inline-flex items-center gap-2 text-[#25D366] font-semibold hover:underline"
                     >
                       Chat Now
                       <MessageCircle className="w-4 h-4" />
@@ -248,14 +249,14 @@ export default function ContactPage() {
               <div className="card overflow-hidden mt-6">
                 <div className="h-64">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3770.9587!2d73.0123!3d19.1375!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b0!2sDigha%2C%20Thane-Belapur%20Road%2C%20Navi%20Mumbai!5e0!3m2!1sen!2sin!4v1234567890"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3770.9824!2d73.0075!3d19.1542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b045c7e26a4d!2sThane%20Belapur%20Road%2C%20Airoli%2C%20Navi%20Mumbai%2C%20Maharashtra%20400708!5e0!3m2!1sen!2sin!4v1709200000000"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="ASIF TRADERS Location"
+                    title="ASIF TRADERS Location - Thane Belapur Road, Airoli, Navi Mumbai"
                   />
                 </div>
                 <div className="p-4 bg-sandstone/30">

@@ -328,11 +328,11 @@ export default function Header() {
               <div className="border-t border-sandstone my-3" />
 
               <a
-                href="tel:+917977572727"
+                href="tel:+918879149174"
                 className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sandstone transition-colors text-terracotta font-semibold"
               >
                 <Phone className="w-5 h-5" />
-                <span>+91 79775 72727</span>
+                <span>+91 88791 49174</span>
               </a>
 
               {user ? (

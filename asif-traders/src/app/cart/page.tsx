@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { products } from '@/data/products';
-import { Minus, Plus, Trash2, ShoppingCart, ArrowRight, FileText, Truck } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingCart, ArrowRight, FileText, Truck, MessageCircle } from 'lucide-react';
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, clearCart, getCartCount } = useCart();
@@ -193,19 +193,21 @@ export default function CartPage() {
                 {/* Checkout Buttons */}
                 <div className="space-y-3">
                   <button
-                    onClick={() => router.push('/checkout')}
+                    onClick={() => router.push('/quote')}
                     className="w-full btn-primary py-3 flex items-center justify-center gap-2"
                   >
-                    <ShoppingCart className="w-5 h-5" />
-                    Proceed to Checkout
-                  </button>
-                  <button
-                    onClick={() => router.push('/quote')}
-                    className="w-full btn-secondary py-3 flex items-center justify-center gap-2"
-                  >
                     <FileText className="w-5 h-5" />
-                    Request Bulk Quote
+                    Get Quote via WhatsApp
                   </button>
+                  <a
+                    href={`https://wa.me/918879149174?text=${encodeURIComponent(`Hi ASIF TRADERS, I would like to order:\n${cartDetails.map(item => `• ${item.product?.name} (${item.variant?.size}) - Qty: ${item.quantity}`).join('\n')}\n\nTotal Items: ${cartCount}\nEstimated Total: ₹${totalAmount.toLocaleString()}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 flex items-center justify-center gap-2 bg-[#25D366] text-white rounded-xl font-semibold hover:bg-[#20bd5a] transition-colors"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    Send Order via WhatsApp
+                  </a>
                 </div>
 
                 {/* Delivery Info */}

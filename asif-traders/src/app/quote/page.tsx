@@ -160,15 +160,15 @@ export default function QuotePage() {
               </div>
 
               {/* WhatsApp Follow-up */}
-              <div className="mt-8 p-4 bg-success/10 rounded-xl">
+              <div className="mt-8 p-4 bg-[#25D366]/10 rounded-xl">
                 <p className="text-sm text-charcoal mb-3">
                   Want faster response? Connect with us on WhatsApp:
                 </p>
                 <a
-                  href={`https://wa.me/917977572727?text=Hi,%20I%20submitted%20quote%20request%20${quoteId}.%20Please%20share%20the%20best%20price.`}
+                  href={`https://wa.me/918879149174?text=Hi,%20I%20submitted%20quote%20request%20${quoteId}.%20Please%20share%20the%20best%20price.`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-success text-white rounded-full font-medium"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-full font-medium"
                 >
                   <MessageCircle className="w-5 h-5" />
                   Chat on WhatsApp
@@ -418,9 +418,9 @@ export default function QuotePage() {
 
                 <div className="mt-6 p-4 bg-sandstone/30 rounded-lg">
                   <p className="font-semibold text-charcoal mb-2">Need urgent help?</p>
-                  <a href="tel:+917977572727" className="flex items-center gap-2 text-terracotta font-medium">
+                  <a href="tel:+918879149174" className="flex items-center gap-2 text-terracotta font-medium">
                     <Phone className="w-4 h-4" />
-                    Call +91 79775 72727
+                    Call +91 88791 49174
                   </a>
                 </div>
               </div>
