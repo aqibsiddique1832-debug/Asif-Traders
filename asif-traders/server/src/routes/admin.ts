@@ -1208,6 +1208,413 @@ router.get('/activity', authenticate, async (req: Request, res: Response, next: 
 });
 
 // ============================================
+// Orders Management
+// ============================================
+
+/**
+ * GET /api/v1/admin/orders
+ * List all orders with filters
+ */
+router.get('/orders', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { status, paymentStatus, search, page = '1', limit = '20' } = req.query;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+
+    const where: any = {};
+    if (status) where.status = status as string;
+    if (paymentStatus) where.paymentStatus = paymentStatus as string;
+    if (search) {
+      where.OR = [
+        { orderNumber: { contains: search as string, mode: 'insensitive' } },
+        { user: { phone: { contains: search as string } } },
+      ];
+    }
+
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include: {
+          user: { select: { id: true, name: true, phone: true, email: true } },
+          items: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum,
+      }),
+      prisma.order.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: orders.map(order => ({
+        ...order,
+        deliveryAddress: JSON.parse(order.deliveryAddress || '{}'),
+      })),
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/admin/orders/:id
+ * Get order details
+ */
+router.get('/orders/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: req.params.id },
+      include: {
+        user: { select: { id: true, name: true, phone: true, email: true, gstin: true } },
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: { select: { name: true, slug: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new AppError('Order not found', 404);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...order,
+        deliveryAddress: JSON.parse(order.deliveryAddress || '{}'),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PUT /api/v1/admin/orders/:id/status
+ * Update order status
+ */
+router.put('/orders/:id/status', authenticate, [
+  body('status')
+    .isIn(['PENDING', 'CONFIRMED', 'PROCESSING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'])
+    .withMessage('Invalid status'),
+  body('notes').optional().trim(),
+  validateRequest,
+], async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { status, notes } = req.body;
+
+    const currentOrder = await prisma.order.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!currentOrder) {
+      throw new AppError('Order not found', 404);
+    }
+
+    const order = await prisma.order.update({
+      where: { id: req.params.id },
+      data: {
+        status,
+        ...(notes && { notes: currentOrder.notes ? `${currentOrder.notes}\n\n${notes}` : notes }),
+      },
+      include: {
+        user: { select: { id: true, name: true, phone: true } },
+        items: true,
+      },
+    });
+
+    await logActivity((req as any).admin.id, 'UPDATE_ORDER_STATUS', {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      oldStatus: currentOrder.status,
+      newStatus: status,
+    });
+
+    logger.info('Order status updated', {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      oldStatus: currentOrder.status,
+      newStatus: status,
+      adminId: (req as any).admin.id,
+    });
+
+    res.json({
+      success: true,
+      message: 'Order status updated',
+      data: {
+        ...order,
+        deliveryAddress: JSON.parse(order.deliveryAddress || '{}'),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PUT /api/v1/admin/orders/:id/payment
+ * Update payment status
+ */
+router.put('/orders/:id/payment', authenticate, [
+  body('paymentStatus')
+    .isIn(['UNPAID', 'PAID', 'PARTIAL', 'REFUNDED'])
+    .withMessage('Invalid payment status'),
+  body('paymentMethod')
+    .optional()
+    .isIn(['COD', 'UPI', 'CARD', 'NET_BANKING', 'RAZORPAY', 'BANK_TRANSFER'])
+    .withMessage('Invalid payment method'),
+  validateRequest,
+], async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { paymentStatus, paymentMethod } = req.body;
+
+    const currentOrder = await prisma.order.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!currentOrder) {
+      throw new AppError('Order not found', 404);
+    }
+
+    const order = await prisma.order.update({
+      where: { id: req.params.id },
+      data: {
+        paymentStatus,
+        ...(paymentMethod && { paymentMethod }),
+      },
+      include: {
+        user: { select: { id: true, name: true, phone: true } },
+        items: true,
+      },
+    });
+
+    await logActivity((req as any).admin.id, 'UPDATE_ORDER_PAYMENT', {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      paymentStatus,
+    });
+
+    res.json({
+      success: true,
+      message: 'Payment status updated',
+      data: {
+        ...order,
+        deliveryAddress: JSON.parse(order.deliveryAddress || '{}'),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/admin/orders/:id/cancel
+ * Cancel order
+ */
+router.post('/orders/:id/cancel', authenticate, [
+  body('reason').optional().trim(),
+  body('refund').optional().isBoolean(),
+  validateRequest,
+], async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { reason, refund = false } = req.body;
+
+    const currentOrder = await prisma.order.findUnique({
+      where: { id: req.params.id },
+      include: { items: true },
+    });
+
+    if (!currentOrder) {
+      throw new AppError('Order not found', 404);
+    }
+
+    if (['DELIVERED', 'CANCELLED'].includes(currentOrder.status)) {
+      throw new ValidationError(`Cannot cancel order with status: ${currentOrder.status}`);
+    }
+
+    // Restore stock
+    await prisma.$transaction(async (tx) => {
+      for (const item of currentOrder.items) {
+        if (item.variantId) {
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data: { stock: { increment: item.quantity } },
+          });
+
+          await tx.inventoryLog.create({
+            data: {
+              variantId: item.variantId,
+              change: item.quantity,
+              reason: 'CANCELLED',
+              referenceId: currentOrder.id,
+              notes: `Order ${currentOrder.orderNumber} cancelled`,
+              adminId: (req as any).admin.id,
+            },
+          });
+        }
+      }
+
+      await tx.order.update({
+        where: { id: req.params.id },
+        data: {
+          status: 'CANCELLED',
+          paymentStatus: refund && currentOrder.paymentStatus === 'PAID' ? 'REFUNDED' : currentOrder.paymentStatus,
+          notes: currentOrder.notes ? `${currentOrder.notes}\n\nCancelled: ${reason || 'No reason provided'}` : `Cancelled: ${reason || 'No reason provided'}`,
+        },
+      });
+    });
+
+    await logActivity((req as any).admin.id, 'CANCEL_ORDER', {
+      orderId: currentOrder.id,
+      orderNumber: currentOrder.orderNumber,
+      reason,
+      stockRestored: true,
+    });
+
+    logger.info('Order cancelled', {
+      orderId: currentOrder.id,
+      orderNumber: currentOrder.orderNumber,
+      adminId: (req as any).admin.id,
+    });
+
+    res.json({
+      success: true,
+      message: 'Order cancelled successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/admin/customers
+ * List customers (users with orders)
+ */
+router.get('/customers', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { search, page = '1', limit = '20' } = req.query;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+
+    const where: any = {
+      orders: { some: {} }, // Only users with orders
+    };
+    if (search) {
+      where.OR = [
+        { name: { contains: search as string, mode: 'insensitive' } },
+        { phone: { contains: search as string } },
+        { email: { contains: search as string, mode: 'insensitive' } },
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        include: {
+          _count: {
+            select: {
+              orders: true,
+              addresses: true,
+            },
+          },
+          orders: {
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+            select: { totalAmount: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum,
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    // Calculate total spending per user
+    const usersWithSpending = await Promise.all(
+      users.map(async (user) => {
+        const spending = await prisma.order.aggregate({
+          _sum: { totalAmount: true },
+          where: { userId: user.id, paymentStatus: 'PAID' },
+        });
+        return {
+          ...user,
+          totalSpending: spending._sum.totalAmount || 0,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: usersWithSpending,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/admin/customers/:id
+ * Get customer details with order history
+ */
+router.get('/customers/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: {
+        addresses: true,
+        orders: {
+          include: { items: true },
+          orderBy: { createdAt: 'desc' },
+        },
+        _count: {
+          select: { orders: true },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new AppError('Customer not found', 404);
+    }
+
+    // Calculate total spending
+    const spending = await prisma.order.aggregate({
+      _sum: { totalAmount: true },
+      where: { userId: user.id, paymentStatus: 'PAID' },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        ...user,
+        totalSpending: spending._sum.totalAmount || 0,
+        deliveryAddress: user.addresses.find(a => a.isDefault) || user.addresses[0],
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================
 // Settings
 // ============================================
 

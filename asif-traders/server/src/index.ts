@@ -8,6 +8,11 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
+import customerRoutes from './routes/customer.js';
+import cartRoutes from './routes/cart.js';
+import orderRoutes from './routes/orders.js';
+import profileRoutes from './routes/profile.js';
+import analyticsRoutes from './routes/analytics.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './utils/logger.js';
 
@@ -69,9 +74,16 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth', customerRoutes);  // Customer OTP auth (request-otp, verify-otp, refresh, logout, me)
+app.use('/api/v1/admin/auth', authRoutes);  // Admin auth (login, logout, refresh, me)
 app.use('/api/v1', publicRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/admin/analytics', analyticsRoutes);
+
+// Customer-facing routes
+app.use('/api/v1/cart', cartRoutes);
+app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/profile', profileRoutes);
 
 // Serve static admin panel
 app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
