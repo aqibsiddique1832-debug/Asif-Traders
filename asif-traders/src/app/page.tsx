@@ -229,7 +229,7 @@ export default function HomePage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Hero Section - Improved with Construction Theme */}
+      {/* Hero Section - Figma Style with Corner Brackets */}
       <section className="relative bg-[#2C3E50] overflow-hidden">
         {/* Construction Background Illustration */}
         <div className="absolute inset-0 overflow-hidden">
@@ -260,9 +260,21 @@ export default function HomePage() {
         {/* Dark gradient overlay - bottom heavy */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20" />
 
+        {/* Figma Style Corner Brackets */}
+        <div className="absolute top-4 left-4 w-10 h-10 border-l-2 border-t-2 border-[#E85D04] z-10" />
+        <div className="absolute top-4 right-4 w-10 h-10 border-r-2 border-t-2 border-[#E85D04] z-10" />
+        <div className="absolute bottom-4 left-4 w-10 h-10 border-l-2 border-b-2 border-[#E85D04] z-10" />
+        <div className="absolute bottom-4 right-4 w-10 h-10 border-r-2 border-b-2 border-[#E85D04] z-10" />
+
+        {/* Inner Corner Accents */}
+        <div className="absolute top-6 left-6 w-6 h-6 border-l border-t border-[#E85D04]/50 z-10" />
+        <div className="absolute top-6 right-6 w-6 h-6 border-r border-t border-[#E85D04]/50 z-10" />
+        <div className="absolute bottom-6 left-6 w-6 h-6 border-l border-b border-[#E85D04]/50 z-10" />
+        <div className="absolute bottom-6 right-6 w-6 h-6 border-r border-b border-[#E85D04]/50 z-10" />
+
         <div className="container py-8 lg:py-12 xl:py-16 relative">
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
-            <div className="text-white">
+            <div className="text-white relative z-10">
               <span className="badge badge-amber mb-3 lg:mb-4 inline-block text-xs lg:text-sm">
                 {heroBanners[currentBanner].badge}
               </span>
@@ -280,7 +292,7 @@ export default function HomePage() {
                   {heroBanners[currentBanner].cta}
                   <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-1" />
                 </Link>
-                <a href="tel:+917977572727" className="btn-secondary border-amber text-amber hover:bg-amber hover:text-[#2C3E50] flex items-center justify-center gap-2 py-2.5 lg:py-3 text-sm lg:text-base">
+                <a href="tel:+917977572727" className="flex items-center justify-center gap-2 py-2.5 lg:py-3 text-sm lg:text-base font-semibold bg-gradient-to-r from-[#E85D04] to-[#D35400] text-white rounded-xl hover:shadow-lg hover:shadow-[#E85D04]/30 transition-all hover:-translate-y-0.5">
                   <Phone className="w-4 h-4 lg:w-5 lg:h-5" />
                   Call Now
                 </a>
@@ -290,7 +302,7 @@ export default function HomePage() {
             {/* Hero Visual - Construction Materials */}
             <div className="relative hidden lg:block">
               <div className="absolute -top-8 -right-8 w-64 h-64 bg-[#E85D04]/20 rounded-full blur-3xl" />
-              <div className="relative bg-gradient-to-br from-[#E85D04]/20 to-amber/10 rounded-2xl p-6 aspect-[4/3] flex items-center justify-center overflow-hidden">
+              <div className="relative bg-gradient-to-br from-[#E85D04]/20 to-amber/10 rounded-2xl p-6 aspect-[4/3] flex items-center justify-center overflow-hidden border border-[#E85D04]/30">
                 {/* Construction Materials Grid */}
                 <div className="grid grid-cols-3 gap-4 w-full max-w-xs">
                   <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center hover:bg-white/20 transition-all hover:-translate-y-1">
@@ -315,7 +327,7 @@ export default function HomePage() {
           </div>
 
           {/* Banner Indicators - Larger dots, orange active state */}
-          <div className="flex gap-2 mt-6 lg:absolute lg:bottom-6 lg:left-1/2 lg:-translate-x-1/2">
+          <div className="flex gap-2 mt-6 lg:absolute lg:bottom-6 lg:left-1/2 lg:-translate-x-1/2 z-10">
             {heroBanners.map((_, index) => (
               <button
                 key={index}
