@@ -152,18 +152,41 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Map Section */}
-      <div className="h-48 lg:h-64 bg-gray-800">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3770.9824!2d73.0075!3d19.1542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b045c7e26a4d!2sThane%20Belapur%20Road%2C%20Airoli%2C%20Navi%20Mumbai%2C%20Maharashtra%20400708!5e0!3m2!1sen!2sin!4v1709200000000"
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          title="ASIF TRADERS Location - Thane Belapur Road, Airoli, Navi Mumbai"
-        />
+      {/* Map Section - Replaced with Static Location Card */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900">
+        <div className="container py-8 lg:py-10">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            {/* Location Info */}
+            <div className="text-center lg:text-left">
+              <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                Visit Our Store
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Digha, Thane-Belapur Road, Navi Mumbai, Maharashtra 400708
+              </p>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <a
+                href="https://maps.google.com/?q=Digha,Thane-Belapur+Road,Airoli,Navi+Mumbai,Maharashtra+400708"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 flex items-center gap-2"
+              >
+                <MapPin className="w-4 h-4" />
+                Get Directions
+              </a>
+              <a
+                href="tel:+918879149174"
+                className="btn-primary flex items-center gap-2"
+              >
+                <Phone className="w-4 h-4" />
+                Call Now
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Bottom Bar */}

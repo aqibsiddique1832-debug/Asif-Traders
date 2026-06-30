@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import PublicShell from "@/components/PublicShell";
 import { AdminProvider } from "@/context/AdminContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 
 export const metadata: Metadata = {
   title: "ASIF TRADERS - Building Materials Supplier | Cement, Steel, TMT, Pipes, Tiles",
@@ -37,9 +38,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col bg-warm-white">
         <AdminProvider>
-          <Providers>
-            <PublicShell>{children}</PublicShell>
-          </Providers>
+          <WishlistProvider>
+            <Providers>
+              <PublicShell>{children}</PublicShell>
+            </Providers>
+          </WishlistProvider>
         </AdminProvider>
       </body>
     </html>

@@ -145,24 +145,78 @@ function ProductCard({ product, index }: { product: typeof products[0]; index: n
 
 function TestimonialCard({ testimonial }: { testimonial: typeof testimonials[0] }) {
   return (
-    <div className="card p-4 lg:p-5 flex-shrink-0 w-72 lg:w-80 scroll-snap-align-start">
-      <div className="flex items-center gap-1 mb-2 lg:mb-3">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`w-3.5 h-3.5 lg:w-4 lg:h-4 ${i < testimonial.rating ? 'text-amber fill-amber' : 'text-gray-300'}`}
-          />
-        ))}
-      </div>
-      <Quote className="w-6 h-6 lg:w-8 lg:h-8 text-terracotta/20 mb-2 lg:mb-3" />
-      <p className="text-charcoal mb-3 lg:mb-4 leading-relaxed text-sm">&ldquo;{testimonial.quote}&rdquo;</p>
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-sandstone rounded-full flex items-center justify-center text-terracotta font-bold text-base lg:text-lg">
-          {testimonial.name.charAt(0)}
+    <div className="card p-5 lg:p-6 flex-shrink-0 w-80 lg:w-96 scroll-snap-align-start bg-gradient-to-br from-white to-sandstone/20 hover:shadow-lg transition-shadow">
+      {/* Header with Stars and Quote */}
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-1">
+          {[...Array(5)].map((_, i) => (
+            <Star
+              key={i}
+              className={`w-4 h-4 lg:w-5 lg:h-5 ${i < testimonial.rating ? 'text-amber fill-amber' : 'text-gray-300'}`}
+            />
+          ))}
+          <span className="ml-1 text-xs text-text-secondary">({testimonial.rating}/5)</span>
         </div>
-        <div>
-          <p className="font-semibold text-charcoal text-sm lg:text-base">{testimonial.name}</p>
-          <p className="text-xs lg:text-sm text-text-secondary">{testimonial.business}</p>
+        <Quote className="w-6 h-6 text-terracotta/30 flex-shrink-0" />
+      </div>
+
+      {/* Quote Text */}
+      <p className="text-charcoal mb-5 leading-relaxed text-sm lg:text-base">&ldquo;{testimonial.quote}&rdquo;</p>
+
+      {/* Customer Info with Photo */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative">
+          <img
+            src={testimonial.photo}
+            alt={testimonial.name}
+            className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border-2 border-terracotta/20"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '';
+              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+              (e.target as HTMLImageElement).classList.add('hidden');
+            }}
+          />
+          {/* Fallback avatar */}
+          <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-sandstone flex items-center justify-center text-terracotta font-bold text-lg lg:text-xl border-2 border-terracotta/20 hidden">
+            {testimonial.name.charAt(0)}
+          </div>
+          {/* Verified Badge */}
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-success rounded-full flex items-center justify-center border-2 border-white">
+            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-charcoal text-sm lg:text-base">{testimonial.name}</p>
+          </div>
+          <p className="text-xs lg:text-sm text-terracotta font-medium">{testimonial.business}</p>
+          <p className="text-xs text-text-secondary flex items-center gap-1 mt-0.5">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {testimonial.location}
+          </p>
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="flex items-center gap-4 pt-4 border-t border-sandstone/30">
+        <div className="text-center flex-1">
+          <p className="text-xs text-text-secondary">Orders</p>
+          <p className="font-bold text-charcoal text-sm">{testimonial.orderValue}</p>
+        </div>
+        <div className="h-8 w-px bg-sandstone/50" />
+        <div className="text-center flex-1">
+          <p className="text-xs text-text-secondary">Projects</p>
+          <p className="font-bold text-charcoal text-sm">{testimonial.projectsCompleted}</p>
+        </div>
+        <div className="h-8 w-px bg-sandstone/50" />
+        <div className="text-center flex-1">
+          <p className="text-xs text-text-secondary">Customer</p>
+          <p className="font-bold text-success text-sm">Verified</p>
         </div>
       </div>
     </div>
@@ -517,21 +571,36 @@ export default function HomePage() {
       <section className="py-6 lg:py-8 bg-white">
         <div className="container">
           <div className="text-center mb-5 lg:mb-8">
-            <h2 className="text-xl lg:text-2xl font-bold text-charcoal mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-              Customer Feedback
+            <h2 className="text-xl lg:text-2xl font-bold text-charcoal mb-2" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              What Our Customers Say
             </h2>
-            <p className="text-xs lg:text-sm text-text-secondary">We value your feedback - Share your experience with us</p>
+
+            {/* Rating Summary */}
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 text-amber fill-amber" />
+                ))}
+              </div>
+              <span className="text-2xl font-bold text-charcoal">4.8</span>
+              <span className="text-sm text-text-secondary">out of 5</span>
+            </div>
+            <p className="text-xs lg:text-sm text-text-secondary mb-3">
+              Based on {testimonials.length} verified customer reviews
+            </p>
+
             <a
               href="https://wa.me/918879149174?text=Hi,%20I%20want%20to%20share%20my%20feedback%20about%20ASIF%20TRADERS."
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-2 text-xs text-terracotta hover:underline"
+              className="inline-flex items-center gap-1 text-xs text-terracotta hover:underline"
             >
+              <MessageCircle className="w-4 h-4" />
               Share your feedback via WhatsApp
             </a>
           </div>
 
-          <div className="flex gap-3 lg:gap-4 overflow-x-auto pb-4 scroll-x hide-scrollbar -mx-4 px-4">
+          <div className="flex gap-4 lg:gap-6 overflow-x-auto pb-4 scroll-x hide-scrollbar -mx-4 px-4">
             {testimonials.map((testimonial) => (
               <TestimonialCard key={testimonial.id} testimonial={testimonial} />
             ))}

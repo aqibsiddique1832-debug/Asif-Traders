@@ -6,6 +6,8 @@ import { products } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
+import PriceDisplay, { formatPrice, calculateDiscount } from '@/components/PriceDisplay';
+import WishlistButton from '@/components/WishlistButton';
 import {
   ChevronRight,
   Minus,
@@ -17,6 +19,8 @@ import {
   Star,
   ArrowLeft,
   FileText,
+  Tag,
+  Heart,
 } from 'lucide-react';
 
 interface ProductClientProps {
@@ -128,17 +132,29 @@ export default function ProductClient({ slug }: ProductClientProps) {
                 <span className="text-sm text-text-secondary">(125 reviews)</span>
               </div>
 
-              {/* Price */}
-              <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-3xl lg:text-4xl font-bold text-terracotta">
-                  ₹{selectedVariant.sellingPrice.toLocaleString()}
-                </span>
-                <span className="text-xl text-text-secondary line-through">
-                  ₹{selectedVariant.mrp.toLocaleString()}
-                </span>
-                <span className="badge badge-success">
-                  Save ₹{((selectedVariant.mrp - selectedVariant.sellingPrice) * quantity).toLocaleString()}
-                </span>
+              {/* Price - Standardized Display */}
+              <div className="mb-6">
+                <PriceDisplay
+                  price={selectedVariant.sellingPrice}
+                  mrp={selectedVariant.mrp}
+                  quantity={quantity}
+                  size="xl"
+                  layout="stacked"
+                  showDiscount={true}
+                  showSavings={true}
+                  className="mb-2"
+                />
+                <div className="flex items-center gap-4 text-sm text-text-secondary">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-4 h-4" />
+                    {formatPrice(selectedVariant.sellingPrice)} per {product.unit.replace('_', ' ')}
+                  </span>
+                  {selectedVariant.discountPercent > 0 && (
+                    <span className="text-success font-medium">
+                      You save {formatPrice((selectedVariant.mrp - selectedVariant.sellingPrice) * quantity)}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Variant Selector */}
@@ -198,7 +214,17 @@ export default function ProductClient({ slug }: ProductClientProps) {
                     >
                       <Minus className="w-5 h-5" />
                     </button>
-                    <span className="w-20 text-center font-mono font-bold text-lg">{quantity}</span>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => {
+                        const newQty = parseInt(e.target.value) || product.minOrderQty;
+                        setQuantity(Math.max(product.minOrderQty, newQty));
+                      }}
+                      className="w-20 text-center font-mono font-bold text-lg bg-transparent outline-none border-none"
+                      min={product.minOrderQty}
+                      max="9999"
+                    />
                     <button
                       onClick={() => setQuantity(quantity + 1)}
                       className="p-3 hover:bg-sandstone transition-colors"
@@ -207,7 +233,7 @@ export default function ProductClient({ slug }: ProductClientProps) {
                     </button>
                   </div>
                   <span className="text-text-secondary">
-                    Total: <span className="font-bold text-charcoal">₹{(selectedVariant.sellingPrice * quantity).toLocaleString()}</span>
+                    Total: <span className="font-bold text-charcoal">{formatPrice(selectedVariant.sellingPrice * quantity)}</span>
                   </span>
                 </div>
               </div>
@@ -229,6 +255,16 @@ export default function ProductClient({ slug }: ProductClientProps) {
                   <FileText className="w-5 h-5" />
                   Request Bulk Quote
                 </button>
+              </div>
+
+              {/* Wishlist */}
+              <div className="flex justify-center mb-8">
+                <WishlistButton
+                  productId={product.id}
+                  productName={product.name}
+                  size="lg"
+                  showTooltip={true}
+                />
               </div>
 
               {/* Delivery Info */}
@@ -364,9 +400,15 @@ export default function ProductClient({ slug }: ProductClientProps) {
                   >
                     <div className="aspect-square bg-sandstone rounded-lg mb-3" />
                     <h3 className="font-semibold text-charcoal line-clamp-2 text-sm">{p.name}</h3>
-                    <p className="text-terracotta font-bold mt-2">
-                      ₹{p.variants[0].sellingPrice.toLocaleString()}
-                    </p>
+                    <PriceDisplay
+                      price={p.variants[0].sellingPrice}
+                      mrp={p.variants[0].mrp}
+                      size="sm"
+                      layout="inline"
+                      showDiscount={true}
+                      showSavings={false}
+                      className="mt-2"
+                    />
                   </Link>
                 ))}
               </div>

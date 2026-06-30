@@ -16,6 +16,7 @@ import analyticsRoutes from './routes/analytics.js';
 import paymentsRoutes from './routes/payments.js';
 import pincodesRoutes from './routes/pincodes.js';
 import seoRoutes from './routes/seo.js';
+import addressesRoutes from './routes/addresses.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './utils/logger.js';
 
@@ -87,6 +88,7 @@ app.use('/api/v1/admin/analytics', analyticsRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/profile', profileRoutes);
+app.use('/api/v1/addresses', addressesRoutes);
 app.use('/api/v1/payments', paymentsRoutes);
 
 // Public routes

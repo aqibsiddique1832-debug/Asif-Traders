@@ -1,24 +1,41 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useLocation } from '@/context/LocationContext';
 import { useAuth } from '@/context/AuthContext';
-import { categories } from '@/data/products';
-import { Search, Menu, X, ShoppingCart, User, MapPin, ChevronDown, Phone } from 'lucide-react';
+import { useWishlist } from '@/context/WishlistContext';
+import { categories, products } from '@/data/products';
+import { Search, Menu, X, ShoppingCart, User, MapPin, ChevronDown, Phone, TrendingUp, Package, ArrowRight, History, Heart } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { getCartCount } = useCart();
   const { location, isLocationSet, setShowLocationModal } = useLocation();
   const { user } = useAuth();
+  const { getWishlistCount } = useWishlist();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchIndex, setSearchIndex] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const cartCount = getCartCount();
+  const wishlistCount = getWishlistCount();
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      setRecentSearches(JSON.parse(saved).slice(0, 5));
+    }
+  }, []);
 
   const searchPlaceholders = [
     'Search "TMT Bars 12mm"',
@@ -28,6 +45,143 @@ export default function Header() {
     'Search "GI Pipes"',
     'Search "MS Angles"',
   ];
+
+  // Search algorithm with fuzzy matching
+  const fuzzyMatch = (text: string, query: string): boolean => {
+    const t = text.toLowerCase();
+    const q = query.toLowerCase().trim();
+    if (!q) return false;
+
+    // Exact match
+    if (t.includes(q)) return true;
+
+    // Fuzzy match - all query chars must appear in order
+    let ti = 0;
+    for (let qi = 0; qi < q.length && ti < t.length; qi++) {
+      const idx = t.indexOf(q[qi], ti);
+      if (idx === -1) return false;
+      ti = idx + 1;
+    }
+    return true;
+  };
+
+  // Get search results
+  const getSearchResults = () => {
+    if (!searchQuery.trim()) return { categories: [], products: [], suggestions: [] };
+
+    const query = searchQuery.toLowerCase().trim();
+
+    // Match categories
+    const matchedCategories = categories.filter(cat =>
+      fuzzyMatch(cat.name, query) || fuzzyMatch(cat.slug, query)
+    ).slice(0, 3);
+
+    // Match products
+    const matchedProducts = products.filter(product =>
+      fuzzyMatch(product.name, query) ||
+      fuzzyMatch(product.category, query) ||
+      fuzzyMatch(product.brand || '', query) ||
+      product.variants.some(v => fuzzyMatch(v.size, query))
+    ).slice(0, 6);
+
+    // Generate suggestions based on partial matches
+    const suggestions: string[] = [];
+    if (query.length >= 2) {
+      // Add category suggestions
+      categories.forEach(cat => {
+        if (cat.name.toLowerCase().startsWith(query) && !matchedCategories.includes(cat)) {
+          suggestions.push(cat.name);
+        }
+      });
+      // Add brand suggestions
+      const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
+      brands.forEach(brand => {
+        if (brand!.toLowerCase().startsWith(query)) {
+          suggestions.push(brand!);
+        }
+      });
+    }
+
+    return {
+      categories: matchedCategories,
+      products: matchedProducts,
+      suggestions: suggestions.slice(0, 5),
+    };
+  };
+
+  const { categories: matchedCategories, products: matchedProducts, suggestions } = getSearchResults();
+  const hasResults = matchedCategories.length > 0 || matchedProducts.length > 0 || suggestions.length > 0;
+
+  // Save search to recent
+  const saveSearch = (query: string) => {
+    if (!query.trim()) return;
+    const updated = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
+
+  // Handle search submit
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      saveSearch(searchQuery);
+      setShowResults(false);
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  // Handle result click
+  const handleResultClick = (type: 'category' | 'product' | 'suggestion', value: string, slug?: string) => {
+    if (type !== 'suggestion') {
+      saveSearch(searchQuery);
+    }
+    setShowResults(false);
+    setSearchQuery('');
+
+    if (type === 'category') {
+      router.push(`/category/${slug}`);
+    } else if (type === 'product') {
+      router.push(`/product/${slug}`);
+    } else {
+      setSearchQuery(value);
+      inputRef.current?.focus();
+    }
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const totalItems = matchedCategories.length + matchedProducts.length;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev + 1) % totalItems);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev - 1 + totalItems) % totalItems);
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+      e.preventDefault();
+      if (selectedIndex < matchedCategories.length) {
+        const cat = matchedCategories[selectedIndex];
+        handleResultClick('category', cat.name, cat.slug);
+      } else {
+        const prod = matchedProducts[selectedIndex - matchedCategories.length];
+        handleResultClick('product', prod.name, prod.slug);
+      }
+    } else if (e.key === 'Escape') {
+      setShowResults(false);
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -134,30 +288,166 @@ export default function Header() {
               </Link>
             </nav>
 
-            {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
-              <form action="/search" method="get" className="relative w-full">
+            {/* Search Bar - Desktop with Autocomplete */}
+            <div ref={searchRef} className="hidden md:flex flex-1 max-w-lg mx-4 lg:mx-8 relative">
+              <form onSubmit={handleSearchSubmit} className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
                 <input
+                  ref={inputRef}
                   type="text"
-                  name="q"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowResults(true);
+                    setSelectedIndex(-1);
+                  }}
+                  onFocus={() => setShowResults(true)}
                   placeholder={searchPlaceholders[searchIndex]}
-                  defaultValue={searchQuery}
                   className="w-full pl-10 pr-4 py-2 border-2 border-sandstone rounded-full focus:border-terracotta focus:outline-none transition-colors text-sm"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      inputRef.current?.focus();
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-sandstone rounded-full"
+                  >
+                    <X className="w-4 h-4 text-text-secondary" />
+                  </button>
+                )}
               </form>
+
+              {/* Autocomplete Dropdown */}
+              {showResults && searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-sandstone/50 overflow-hidden z-50 max-h-[400px] overflow-y-auto">
+                  {/* Categories */}
+                  {matchedCategories.length > 0 && (
+                    <div className="p-2 border-b border-sandstone/30">
+                      <p className="px-3 py-1 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                        Categories
+                      </p>
+                      {matchedCategories.map((cat, idx) => (
+                        <button
+                          key={cat.slug}
+                          onClick={() => handleResultClick('category', cat.name, cat.slug)}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-sandstone/50 transition-colors text-left ${
+                            selectedIndex === idx ? 'bg-terracotta/10' : ''
+                          }`}
+                        >
+                          <div className="w-8 h-8 bg-terracotta/10 rounded-lg flex items-center justify-center">
+                            <Package className="w-4 h-4 text-terracotta" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-charcoal">{cat.name}</p>
+                            <p className="text-xs text-text-secondary">{cat.productCount}+ products</p>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-text-secondary" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Products */}
+                  {matchedProducts.length > 0 && (
+                    <div className="p-2 border-b border-sandstone/30">
+                      <p className="px-3 py-1 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                        Products
+                      </p>
+                      {matchedProducts.map((product, idx) => {
+                        const prodIndex = matchedCategories.length + idx;
+                        return (
+                          <button
+                            key={product.id}
+                            onClick={() => handleResultClick('product', product.name, product.slug)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-sandstone/50 transition-colors text-left ${
+                              selectedIndex === prodIndex ? 'bg-terracotta/10' : ''
+                            }`}
+                          >
+                            <div className="w-10 h-10 bg-sandstone rounded-lg flex items-center justify-center">
+                              <Package className="w-5 h-5 text-sandstone-dark" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-charcoal truncate">{product.name}</p>
+                              <p className="text-xs text-text-secondary">
+                                {product.category} • ₹{product.variants[0]?.sellingPrice.toLocaleString()}
+                              </p>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-text-secondary flex-shrink-0" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Suggestions */}
+                  {suggestions.length > 0 && !hasResults && (
+                    <div className="p-2">
+                      <p className="px-3 py-1 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                        Suggestions
+                      </p>
+                      {suggestions.map(suggestion => (
+                        <button
+                          key={suggestion}
+                          onClick={() => handleResultClick('suggestion', suggestion)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-sandstone/50 transition-colors text-left"
+                        >
+                          <TrendingUp className="w-4 h-4 text-text-secondary" />
+                          <span className="text-charcoal">{suggestion}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* View All Results */}
+                  {hasResults && (
+                    <button
+                      onClick={handleSearchSubmit}
+                      className="w-full p-3 bg-terracotta/5 hover:bg-terracotta/10 text-terracotta font-medium text-center transition-colors flex items-center justify-center gap-2"
+                    >
+                      View all results for "{searchQuery}"
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Recent Searches (when empty) */}
+              {showResults && !searchQuery.trim() && recentSearches.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-sandstone/50 overflow-hidden z-50">
+                  <div className="p-2">
+                    <p className="px-3 py-1 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                      Recent Searches
+                    </p>
+                    {recentSearches.map((search, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setSearchQuery(search);
+                          inputRef.current?.focus();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-sandstone/50 transition-colors text-left"
+                      >
+                        <History className="w-4 h-4 text-text-secondary" />
+                        <span className="text-charcoal">{search}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right Actions */}
             <div className="flex items-center gap-1 lg:gap-2">
               {/* Mobile Search */}
-              <Link
-                href="/search"
+              <button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
                 className="p-2 rounded-lg hover:bg-sandstone transition-colors md:hidden"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5 text-charcoal" />
-              </Link>
+              </button>
 
               {/* Offers Badge */}
               <Link
@@ -181,6 +471,20 @@ export default function Header() {
                 )}
               </Link>
 
+              {/* Wishlist */}
+              <Link
+                href="/wishlist"
+                className="relative p-2 rounded-lg hover:bg-sandstone transition-colors"
+                aria-label="Wishlist"
+              >
+                <Heart className={`w-5 h-5 ${wishlistCount > 0 ? 'text-terracotta fill-terracotta' : 'text-charcoal'}`} />
+                {wishlistCount > 0 && (
+                  <span className={`absolute -top-1 ${wishlistCount > 99 ? '-right-2' : '-right-1'} bg-terracotta text-white font-bold rounded-full flex items-center justify-center animate-pulse-custom ${wishlistCount > 99 ? 'w-7 h-5 text-[10px] px-1' : 'w-5 h-5 text-xs'}`}>
+                    {wishlistCount > 99 ? '99+' : wishlistCount}
+                  </span>
+                )}
+              </Link>
+
               {/* User */}
               <Link
                 href={user ? '/profile' : '/login'}
@@ -194,18 +498,51 @@ export default function Header() {
 
           {/* Mobile Search Expanded */}
           {isSearchOpen && (
-            <div className="pb-3 md:hidden">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
+            <div ref={searchRef} className="pb-3 md:hidden relative">
+              <form onSubmit={handleSearchSubmit}>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" style={{ top: 'calc(50% + 6px)' }} />
                 <input
                   type="text"
                   placeholder={searchPlaceholders[searchIndex]}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowResults(true);
+                  }}
+                  onFocus={() => setShowResults(true)}
                   className="w-full pl-10 pr-4 py-2.5 border-2 border-sandstone rounded-full focus:border-terracotta focus:outline-none transition-colors"
                   autoFocus
                 />
-              </div>
+              </form>
+
+              {/* Mobile Search Results */}
+              {showResults && searchQuery.trim() && hasResults && (
+                <div className="mt-2 bg-white rounded-xl shadow-lg border border-sandstone/50 overflow-hidden max-h-[300px] overflow-y-auto">
+                  {matchedCategories.map((cat) => (
+                    <button
+                      key={cat.slug}
+                      onClick={() => handleResultClick('category', cat.name, cat.slug)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-sandstone/50 transition-colors text-left border-b border-sandstone/30 last:border-0"
+                    >
+                      <Package className="w-5 h-5 text-terracotta" />
+                      <span className="font-medium text-charcoal">{cat.name}</span>
+                    </button>
+                  ))}
+                  {matchedProducts.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleResultClick('product', product.name, product.slug)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-sandstone/50 transition-colors text-left border-b border-sandstone/30 last:border-0"
+                    >
+                      <Package className="w-5 h-5 text-text-secondary" />
+                      <div>
+                        <p className="font-medium text-charcoal">{product.name}</p>
+                        <p className="text-xs text-text-secondary">₹{product.variants[0]?.sellingPrice.toLocaleString()}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

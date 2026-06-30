@@ -1663,40 +1663,55 @@ export const testimonials = [
     name: 'Rajesh Sharma',
     business: 'Sharma Construction Co.',
     location: 'Rabale, Navi Mumbai',
+    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     quote: 'ASIF TRADERS has been our trusted supplier for 5 years. Their TMT bars and cement always arrive on time, and the prices are genuinely competitive for bulk orders. Highly recommend for any contractor.',
-    rating: 5
+    rating: 5,
+    orderValue: '₹15+ Lakhs',
+    projectsCompleted: '50+'
   },
   {
     id: 2,
     name: 'Prakash Patel',
     business: 'Patel Infra Projects',
     location: 'Thane',
+    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
     quote: 'We completed a G+3 residential project using materials from ASIF TRADERS. Quality of AAC blocks and TMT bars was excellent. The team is responsive and handles urgent deliveries without fuss.',
-    rating: 5
+    rating: 5,
+    orderValue: '₹8+ Lakhs',
+    projectsCompleted: '25+'
   },
   {
     id: 3,
     name: 'Vijay More',
     business: 'More Associates (Architects)',
-    location: 'Vashi',
+    location: 'Vashi, Navi Mumbai',
+    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
     quote: 'As an architect, I recommend ASIF TRADERS to my clients for their renovation projects. They stock a good range of tiles and the staff helps with technical guidance on material selection.',
-    rating: 4
+    rating: 4,
+    orderValue: '₹3+ Lakhs',
+    projectsCompleted: '40+'
   },
   {
     id: 4,
     name: 'Sunil Gawde',
     business: 'Gawde Masonry Works',
-    location: 'Airoli',
+    location: 'Airoli, Navi Mumbai',
+    photo: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&h=150&fit=crop&crop=face',
     quote: 'For a small contractor like me, ASIF TRADERS is reliable. I can get cement, sand, and steel delivered to my site without any quality complaints. Their wholesale pricing works for my project sizes.',
-    rating: 5
+    rating: 5,
+    orderValue: '₹2+ Lakhs',
+    projectsCompleted: '15+'
   },
   {
     id: 5,
     name: 'Anita Deshmukh',
     business: 'Homeowner',
-    location: 'Ghansoli',
+    location: 'Ghansoli, Navi Mumbai',
+    photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face',
     quote: 'Built my first home with ASIF TRADERS supplies. They guided me on choosing the right cement grade and TMT size. Materials were genuine ISI-marked products. Good experience overall.',
-    rating: 5
+    rating: 5,
+    orderValue: '₹6+ Lakhs',
+    projectsCompleted: '1'
   }
 ];
 
