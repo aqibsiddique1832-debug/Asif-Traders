@@ -1,6 +1,6 @@
 // ============================================
 // ASIF TRADERS - Database Schema (SQLite)
-// Phase 2: Customer Engagement
+// Phase 3: Commerce Maturity
 // ============================================
 
 generator client {
@@ -58,6 +58,7 @@ model AdminUser {
   // Relations
   quoteRequests QuoteRequest[]  @relation("AssignedQuotes")
   activityLogs  AdminActivityLog[]
+  refunds       PaymentRefund[]
 
   @@index([email])
 }
@@ -283,8 +284,11 @@ model Order {
   updatedAt       DateTime  @updatedAt
 
   // Relations
-  user  User        @relation(fields: [userId], references: [id])
-  items OrderItem[]
+  user     User        @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+  payment  Payment?
+  invoice  Invoice?
+  whatsAppLogs WhatsAppLog[]
 
   @@index([orderNumber])
   @@index([userId])
@@ -298,6 +302,7 @@ model OrderItem {
   variantId           String?
   productNameSnapshot  String
   variantSizeSnapshot  String?
+  hsnCode             String?
   quantity            Int
   unitPriceSnapshot   Float
   gstPercentSnapshot   Float    @default(18)  // Default 18% GST
@@ -309,6 +314,160 @@ model OrderItem {
   variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
+}
+
+// ============================================
+// Payments (Phase 3)
+// ============================================
+
+model Payment {
+  id                   String   @id @default(uuid())
+  orderId              String   @unique
+  gateway              String   @default("razorpay")  // razorpay, razorpay_test
+  gatewayOrderId       String?  // Razorpay order ID
+  gatewayPaymentId     String?  // Set after payment
+  gatewayRefundId      String?  // Set after refund
+  gatewaySignature     String?  // For verification
+  amount               Float    // Amount in INR (not paise)
+  currency             String   @default("INR")
+  status               String   @default("created")  // created, authorized, captured, failed, refunded, partial_refund
+  method               String?  // upi, card, netbanking, wallet, cash
+  errorCode            String?
+  errorDescription     String?
+  notes                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refunds   PaymentRefund[]
+
+  @@index([gatewayOrderId])
+  @@index([gatewayPaymentId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PaymentRefund {
+  id               String   @id @default(uuid())
+  paymentId        String
+  amount           Float    // Refund amount
+  status           String   @default("initiated")  // initiated, processing, completed, failed
+  gatewayRefundId  String?  // Razorpay refund ID
+  reason           String?
+  initiatedById    String?  // Admin who initiated
+  processedAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  payment    Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  initiatedBy AdminUser? @relation(fields: [initiatedById], references: [id])
+
+  @@index([paymentId])
+  @@index([status])
+}
+
+// ============================================
+// Invoices (Phase 3)
+// GST-compliant invoice storage
+// ============================================
+
+model Invoice {
+  id              String   @id @default(uuid())
+  orderId         String   @unique
+  invoiceNumber   String   @unique  // Format: AT/2026-27/0001
+  invoiceDate     DateTime @default(now())
+  // GST breakdown stored as JSON string in SQLite
+  subtotal        Float    // Pre-tax amount
+  cgstAmount      Float    @default(0)
+  sgstAmount      Float    @default(0)
+  igstAmount      Float    @default(0)
+  totalGst        Float    @default(0)
+  totalAmount     Float    // Grand total
+  // Delivery address snapshot for invoice
+  customerName    String?
+  customerAddress String?
+  customerGstin  String?
+  gstRate         Float    @default(18)  // Overall GST rate
+  isIgst          Boolean  @default(false)  // True if inter-state
+  pdfUrl          String?  // Cloudinary/S3 URL
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceNumber])
+  @@index([createdAt])
+}
+
+// ============================================
+// Pincodes (Phase 3)
+// Delivery serviceability
+// ============================================
+
+model Pincode {
+  id              String   @id @default(uuid())
+  pincode         String   @unique  // e.g., "400708"
+  areaName        String   // e.g., "Airoli"
+  city            String   @default("Navi Mumbai")
+  state           String   @default("Maharashtra")
+  isServiceable   Boolean  @default(true)
+  deliveryDays    Int      @default(2)  // Estimated delivery days
+  deliveryCharge  Float    @default(0)  // 0 = free delivery
+  isFreeDelivery  Boolean  @default(true)  // Override for free delivery threshold
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([pincode])
+  @@index([isServiceable])
+  @@index([city])
+}
+
+// ============================================
+// WhatsApp Logs (Phase 3)
+// Transactional message tracking
+// ============================================
+
+model WhatsAppLog {
+  id              String   @id @default(uuid())
+  recipientPhone   String   // +91XXXXXXXXXX format
+  templateName     String   // Template identifier
+  templateVariables String?  // JSON string of variables
+  relatedOrderId   String?
+  relatedQuoteId   String?
+  messageContent   String?  // Actual message sent
+  status           String   @default("pending")  // pending, sent, delivered, read, failed, bounced
+  providerMessageId String? // Meta/Interakt message ID
+  errorCode        String?
+  errorMessage     String?
+  sentAt           DateTime?
+  deliveredAt      DateTime?
+  readAt           DateTime?
+  createdAt        DateTime @default(now())
+
+  // Relations
+  relatedOrder  Order?        @relation(fields: [relatedOrderId], references: [id])
+  relatedQuote  QuoteRequest? @relation(fields: [relatedQuoteId], references: [id])
+
+  @@index([recipientPhone])
+  @@index([status])
+  @@index([createdAt])
+  @@index([relatedOrderId])
+}
+
+// ============================================
+// Invoice Sequence (Phase 3)
+// Ensures sequential invoice numbering
+// ============================================
+
+model InvoiceSequence {
+  id              String   @id @default(uuid())
+  financialYear   String   @unique  // e.g., "2026-27"
+  lastSequence    Int      @default(0)
+  updatedAt       DateTime @updatedAt
 }
 
 // ============================================
@@ -359,6 +518,7 @@ model QuoteRequest {
   assignedTo AdminUser?    @relation("AssignedQuotes", fields: [assignedToId], references: [id])
   items      QuoteRequestItem[]
   events     QuoteEvent[]
+  whatsAppLogs WhatsAppLog[]
 
   @@index([referenceNo])
   @@index([status])

@@ -1665,4 +1665,458 @@ router.put('/settings/:key', authenticate, requireRole('SUPER_ADMIN', 'ADMIN'), 
   }
 });
 
+// ============================================
+// Payments Management
+// ============================================
+
+/**
+ * GET /api/v1/admin/payments
+ * List all payments
+ */
+router.get('/payments', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { status, gateway, page = '1', limit = '20' } = req.query;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+
+    const where: any = {};
+    if (status) where.status = status as string;
+    if (gateway) where.gateway = gateway as string;
+
+    const [payments, total] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              user: { select: { name: true, phone: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum,
+      }),
+      prisma.payment.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: payments,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/admin/payments/:id
+ * Get payment details
+ */
+router.get('/payments/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { id: req.params.id },
+      include: {
+        order: {
+          include: {
+            user: { select: { id: true, name: true, phone: true, email: true } },
+            items: true,
+          },
+        },
+        refunds: {
+          include: {
+            initiatedBy: { select: { name: true, email: true } },
+          },
+        },
+      },
+    });
+
+    if (!payment) {
+      throw new AppError('Payment not found', 404);
+    }
+
+    res.json({
+      success: true,
+      data: payment,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/admin/payments/order/:orderId
+ * Get payment for specific order
+ */
+router.get('/payments/order/:orderId', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { orderId: req.params.orderId },
+      include: {
+        refunds: {
+          include: {
+            initiatedBy: { select: { name: true, email: true } },
+          },
+        },
+      },
+    });
+
+    if (!payment) {
+      res.json({
+        success: true,
+        data: null,
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: payment,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/admin/payments/:id/refund
+ * Initiate refund (admin)
+ */
+router.post('/payments/:id/refund', authenticate, requireRole('SUPER_ADMIN', 'ADMIN'), [
+  body('amount').isNumeric().withMessage('Amount must be a number'),
+  body('reason').notEmpty().trim().withMessage('Reason is required'),
+  validateRequest,
+], async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { amount, reason } = req.body;
+    const adminId = (req as any).admin.id;
+
+    const payment = await prisma.payment.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!payment) {
+      throw new AppError('Payment not found', 404);
+    }
+
+    if (payment.status !== 'captured') {
+      throw new ValidationError('Cannot refund: payment has not been captured');
+    }
+
+    if (!payment.gatewayPaymentId) {
+      throw new ValidationError('Cannot refund: no gateway payment ID');
+    }
+
+    // Check if full refund exceeds payment amount
+    const existingRefunds = await prisma.paymentRefund.aggregate({
+      where: { paymentId: payment.id, status: 'completed' },
+      _sum: { amount: true },
+    });
+
+    const alreadyRefunded = existingRefunds._sum.amount || 0;
+    if (amount > payment.amount - alreadyRefunded) {
+      throw new ValidationError(`Refund amount exceeds available amount (Max: ₹${(payment.amount - alreadyRefunded).toFixed(2)})`);
+    }
+
+    // Import and use payment service
+    const { initiateRefund } = await import('../services/payment.service.js');
+
+    const result = await initiateRefund(payment.id, amount, reason, adminId);
+
+    await logActivity(adminId, 'INITIATE_REFUND', {
+      paymentId: payment.id,
+      orderId: payment.orderId,
+      amount,
+      reason,
+    });
+
+    res.json({
+      success: true,
+      message: 'Refund initiated successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================
+// Invoices Management
+// ============================================
+
+/**
+ * GET /api/v1/admin/invoices
+ * List all invoices
+ */
+router.get('/invoices', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { search, page = '1', limit = '20' } = req.query;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { invoiceNumber: { contains: search as string, mode: 'insensitive' } },
+        { order: { orderNumber: { contains: search as string, mode: 'insensitive' } } },
+        { customerName: { contains: search as string, mode: 'insensitive' } },
+      ];
+    }
+
+    const [invoices, total] = await Promise.all([
+      prisma.invoice.findMany({
+        where,
+        include: {
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              user: { select: { name: true, phone: true } },
+            },
+          },
+        },
+        orderBy: { invoiceDate: 'desc' },
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum,
+      }),
+      prisma.invoice.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: invoices,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/admin/invoices/:id
+ * Get invoice details
+ */
+router.get('/invoices/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: req.params.id },
+      include: {
+        order: {
+          include: {
+            user: { select: { id: true, name: true, phone: true, email: true, gstin: true } },
+            items: {
+              include: {
+                variant: {
+                  include: {
+                    product: { select: { name: true, slug: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!invoice) {
+      throw new AppError('Invoice not found', 404);
+    }
+
+    res.json({
+      success: true,
+      data: invoice,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/admin/orders/:id/invoice
+ * Generate invoice for order
+ */
+router.post('/orders/:id/invoice', authenticate, requireRole('SUPER_ADMIN', 'ADMIN', 'MANAGER'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!order) {
+      throw new AppError('Order not found', 404);
+    }
+
+    // Check if invoice already exists
+    const existingInvoice = await prisma.invoice.findUnique({
+      where: { orderId: order.id },
+    });
+
+    if (existingInvoice) {
+      res.json({
+        success: true,
+        message: 'Invoice already exists',
+        data: existingInvoice,
+      });
+      return;
+    }
+
+    // Generate invoice
+    const { createInvoiceFromOrder, generateInvoicePDF } = await import('../services/invoice.service.js');
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const invoiceId = await createInvoiceFromOrder(order.id);
+
+    // Generate PDF
+    const pdfDir = path.join(process.cwd(), 'public', 'invoices');
+    if (!fs.existsSync(pdfDir)) {
+      fs.mkdirSync(pdfDir, { recursive: true });
+    }
+    const pdfPath = path.join(pdfDir, `invoice-${order.orderNumber}.pdf`);
+    await generateInvoicePDF(invoiceId, pdfPath);
+
+    // Update invoice with PDF URL
+    const pdfUrl = `/invoices/invoice-${order.orderNumber}.pdf`;
+    const invoice = await prisma.invoice.update({
+      where: { id: invoiceId },
+      data: { pdfUrl },
+    });
+
+    await logActivity((req as any).admin.id, 'GENERATE_INVOICE', {
+      invoiceId: invoice.id,
+      invoiceNumber: invoice.invoiceNumber,
+      orderId: order.id,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Invoice generated successfully',
+      data: invoice,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================
+// WhatsApp Logs
+// ============================================
+
+/**
+ * GET /api/v1/admin/whatsapp-logs
+ * Get WhatsApp message logs
+ */
+router.get('/whatsapp-logs', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { status, template, page = '1', limit = '50' } = req.query;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+
+    const where: any = {};
+    if (status) where.status = status as string;
+    if (template) where.templateName = template as string;
+
+    const [logs, total] = await Promise.all([
+      prisma.whatsAppLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum,
+      }),
+      prisma.whatsAppLog.count({ where }),
+    ]);
+
+    // Get unique templates
+    const templates = await prisma.whatsAppLog.groupBy({
+      by: ['templateName'],
+      _count: true,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        logs,
+        templates: templates.map(t => ({ name: t.templateName, count: t._count })),
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          pages: Math.ceil(total / limitNum),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/admin/whatsapp-logs/order/:orderId
+ * Get WhatsApp logs for specific order
+ */
+router.get('/whatsapp-logs/order/:orderId', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const logs = await prisma.whatsAppLog.findMany({
+      where: { relatedOrderId: req.params.orderId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({
+      success: true,
+      data: logs,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/admin/whatsapp-logs/test
+ * Send test WhatsApp message (admin)
+ */
+router.post('/whatsapp-logs/test', authenticate, requireRole('SUPER_ADMIN', 'ADMIN'), [
+  body('phone').matches(/^[1-9][0-9]{9}$/).withMessage('Valid 10-digit phone number required'),
+  body('templateName').notEmpty(),
+  body('variables').isObject(),
+  validateRequest,
+], async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { phone, templateName, variables } = req.body;
+
+    const { sendWhatsAppMessage } = await import('../services/whatsapp.service.js');
+
+    const result = await sendWhatsAppMessage(
+      phone,
+      templateName,
+      variables
+    );
+
+    await logActivity((req as any).admin.id, 'TEST_WHATSAPP', {
+      phone,
+      templateName,
+      result,
+    });
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -13,6 +13,9 @@ import cartRoutes from './routes/cart.js';
 import orderRoutes from './routes/orders.js';
 import profileRoutes from './routes/profile.js';
 import analyticsRoutes from './routes/analytics.js';
+import paymentsRoutes from './routes/payments.js';
+import pincodesRoutes from './routes/pincodes.js';
+import seoRoutes from './routes/seo.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './utils/logger.js';
 
@@ -84,6 +87,18 @@ app.use('/api/v1/admin/analytics', analyticsRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/profile', profileRoutes);
+app.use('/api/v1/payments', paymentsRoutes);
+
+// Public routes
+app.use('/api/v1/pincodes', pincodesRoutes);
+app.use('/api/v1/seo', seoRoutes);
+
+// SEO static routes
+app.get('/sitemap.xml', seoRoutes);
+app.get('/robots.txt', seoRoutes);
+
+// Webhooks
+app.use('/api/v1/webhooks', paymentsRoutes);
 
 // Serve static admin panel
 app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
