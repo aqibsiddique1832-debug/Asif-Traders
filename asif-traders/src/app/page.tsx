@@ -470,28 +470,43 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 lg:gap-5">
             {categories.map((category, index) => (
               <Link
                 key={category.slug}
                 href={`/category/${category.slug}`}
-                className="flex flex-col items-center text-center group py-4 transition-all"
+                className="group block"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="relative w-full aspect-square mb-3 flex items-center justify-center">
-                  <img
-                    src={categoryImages[category.slug]}
-                    alt={category.name}
-                    className="max-w-[80%] max-h-[80%] object-contain filter drop-shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-xl"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
+                <div
+                  className="relative bg-[#F5F8FF] rounded-[20px] p-4 lg:p-5 transition-all duration-300 ease-out hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:scale-[1.02]"
+                  style={{
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  {/* Category Image Container */}
+                  <div className="relative w-full aspect-square mb-3 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={categoryImages[category.slug]}
+                      alt={category.name}
+                      className="w-full h-full object-contain transition-all duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+
+                  {/* Category Info */}
+                  <div className="text-center">
+                    <h3
+                      className="font-semibold text-sm lg:text-base text-charcoal group-hover:text-terracotta transition-colors mb-1"
+                      style={{ fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 600 }}
+                    >
+                      {category.name}
+                    </h3>
+                    <p className="text-xs text-text-secondary">{category.productCount}+ Products</p>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-sm lg:text-base text-charcoal group-hover:text-terracotta transition-colors mb-1">
-                  {category.name}
-                </h3>
-                <p className="text-xs text-text-secondary">{category.productCount}+ Products</p>
               </Link>
             ))}
           </div>
