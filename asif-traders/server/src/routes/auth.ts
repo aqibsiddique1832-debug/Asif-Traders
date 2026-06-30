@@ -9,7 +9,7 @@ import { body, validationResult } from 'express-validator';
 import { AppError, UnauthorizedError, ValidationError } from '../middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
-const router = Router();
+const router: Router = Router();
 const prisma = new PrismaClient();
 
 // JWT Token generation
@@ -17,13 +17,13 @@ const generateTokens = (adminId: string, email: string) => {
   const accessToken = jwt.sign(
     { sub: adminId, email },
     process.env.JWT_SECRET!,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { expiresIn: '7d' }
   );
 
   const refreshToken = jwt.sign(
     { sub: adminId, email, type: 'refresh' },
     process.env.JWT_REFRESH_SECRET!,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
+    { expiresIn: '30d' }
   );
 
   return { accessToken, refreshToken };
@@ -36,8 +36,8 @@ const validateRequest = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new ValidationError('Validation failed',
-      errors.array().reduce((acc, err) => {
-        const field = err.path.join('.');
+      errors.array().reduce((acc, err: any) => {
+        const field = err.path || 'unknown';
         acc[field] = [...(acc[field] || []), err.msg];
         return acc;
       }, {} as Record<string, string[]>)

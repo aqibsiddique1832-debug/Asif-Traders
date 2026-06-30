@@ -2,50 +2,24 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { AdminUser, initialAdminUsers, WebsiteSettings, initialWebsiteSettings, Product, initialProducts, Category, initialCategories, Brand, initialBrands, Order, initialOrders, Customer, initialCustomers, Quote, initialQuotes, Pincode, initialPincodes, DeliveryBoy, initialDeliveryBoys, Coupon, initialCoupons, HeroSlider } from '@/data/adminData';
+import api from '@/lib/api';
+import { AdminUser, Product, Category, Brand, Quote, Contact, Testimonial, Setting } from '@/data/adminData';
 
 interface AdminContextType {
   isAuthenticated: boolean;
   adminUser: AdminUser | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  accessToken: string | null;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  settings: WebsiteSettings;
-  updateSettings: (settings: Partial<WebsiteSettings>) => void;
+  settings: Setting | null;
   products: Product[];
-  addProduct: (product: Product) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
   categories: Category[];
-  addCategory: (category: Category) => void;
-  updateCategory: (id: string, category: Partial<Category>) => void;
-  deleteCategory: (id: string) => void;
   brands: Brand[];
-  addBrand: (brand: Brand) => void;
-  updateBrand: (id: string, brand: Partial<Brand>) => void;
-  deleteBrand: (id: string) => void;
-  orders: Order[];
-  updateOrder: (id: string, order: Partial<Order>) => void;
-  customers: Customer[];
-  updateCustomer: (id: string, customer: Partial<Customer>) => void;
   quotes: Quote[];
-  updateQuote: (id: string, quote: Partial<Quote>) => void;
-  deleteQuote: (id: string) => void;
-  pincodes: Pincode[];
-  addPincode: (pincode: Pincode) => void;
-  updatePincode: (id: string, pincode: Partial<Pincode>) => void;
-  deletePincode: (id: string) => void;
-  deliveryBoys: DeliveryBoy[];
-  addDeliveryBoy: (boy: DeliveryBoy) => void;
-  updateDeliveryBoy: (id: string, boy: Partial<DeliveryBoy>) => void;
-  deleteDeliveryBoy: (id: string) => void;
-  coupons: Coupon[];
-  addCoupon: (coupon: Coupon) => void;
-  updateCoupon: (id: string, coupon: Partial<Coupon>) => void;
-  deleteCoupon: (id: string) => void;
-  heroSliders: HeroSlider[];
-  updateHeroSlider: (id: string, slider: Partial<HeroSlider>) => void;
-  addHeroSlider: (slider: HeroSlider) => void;
-  deleteHeroSlider: (id: string) => void;
+  contacts: Contact[];
+  testimonials: Testimonial[];
+  loading: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -54,175 +28,149 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
-  const [settings, setSettings] = useState<WebsiteSettings>(initialWebsiteSettings);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [brands, setBrands] = useState<Brand[]>(initialBrands);
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
-  const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
-  const [pincodes, setPincodes] = useState<Pincode[]>(initialPincodes);
-  const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoy[]>(initialDeliveryBoys);
-  const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons);
-  const [heroSliders, setHeroSliders] = useState<HeroSlider[]>(initialWebsiteSettings.heroSliders);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const SESSION_TIMEOUT = 30 * 60 * 1000;
+  // Data states
+  const [settings, setSettings] = useState<Setting | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
+  // Check for existing session on mount
   useEffect(() => {
-    const storedAuth = localStorage.getItem('adminAuth');
-    const storedTime = localStorage.getItem('adminAuthTime');
+    const checkAuth = async () => {
+      const storedToken = localStorage.getItem('adminAccessToken');
+      const storedRefreshToken = localStorage.getItem('adminRefreshToken');
+      const storedUser = localStorage.getItem('adminUser');
 
-    if (storedAuth && storedTime) {
-      const elapsed = Date.now() - parseInt(storedTime);
-      if (elapsed < SESSION_TIMEOUT) {
-        setIsAuthenticated(true);
-        setAdminUser(JSON.parse(storedAuth));
-      } else {
-        localStorage.removeItem('adminAuth');
-        localStorage.removeItem('adminAuthTime');
+      if (storedToken && storedUser) {
+        try {
+          // Verify token is still valid
+          const result = await api.getMe(storedToken);
+          if (result.success && result.data) {
+            setAccessToken(storedToken);
+            setAdminUser(result.data as unknown as AdminUser);
+            setIsAuthenticated(true);
+            localStorage.setItem('adminRefreshToken', storedRefreshToken || '');
+          } else {
+            // Try to refresh token
+            if (storedRefreshToken) {
+              const refreshResult = await api.refreshToken(storedRefreshToken);
+              if (refreshResult.success && refreshResult.data) {
+                setAccessToken(refreshResult.data.accessToken);
+                localStorage.setItem('adminAccessToken', refreshResult.data.accessToken);
+                localStorage.setItem('adminRefreshToken', refreshResult.data.refreshToken);
+                const meResult = await api.getMe(refreshResult.data.accessToken);
+                if (meResult.success && meResult.data) {
+                  setAdminUser(meResult.data as unknown as AdminUser);
+                  setIsAuthenticated(true);
+                }
+              } else {
+                clearAuth();
+              }
+            } else {
+              clearAuth();
+            }
+          }
+        } catch {
+          clearAuth();
+        }
       }
-    }
+      setLoading(false);
+    };
 
-    const storedSettings = localStorage.getItem('adminSettings');
-    if (storedSettings) {
-      const parsed = JSON.parse(storedSettings);
-      setSettings(parsed);
-      setHeroSliders(parsed.heroSliders || initialWebsiteSettings.heroSliders);
-    }
-    const storedProducts = localStorage.getItem('adminProducts');
-    if (storedProducts) setProducts(JSON.parse(storedProducts));
-    const storedCategories = localStorage.getItem('adminCategories');
-    if (storedCategories) setCategories(JSON.parse(storedCategories));
-    const storedBrands = localStorage.getItem('adminBrands');
-    if (storedBrands) setBrands(JSON.parse(storedBrands));
-    const storedOrders = localStorage.getItem('adminOrders');
-    if (storedOrders) setOrders(JSON.parse(storedOrders));
-    const storedCustomers = localStorage.getItem('adminCustomers');
-    if (storedCustomers) setCustomers(JSON.parse(storedCustomers));
-    const storedQuotes = localStorage.getItem('adminQuotes');
-    if (storedQuotes) setQuotes(JSON.parse(storedQuotes));
-    const storedPincodes = localStorage.getItem('adminPincodes');
-    if (storedPincodes) setPincodes(JSON.parse(storedPincodes));
-    const storedDeliveryBoys = localStorage.getItem('adminDeliveryBoys');
-    if (storedDeliveryBoys) setDeliveryBoys(JSON.parse(storedDeliveryBoys));
-    const storedCoupons = localStorage.getItem('adminCoupons');
-    if (storedCoupons) setCoupons(JSON.parse(storedCoupons));
+    checkAuth();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('adminSettings', JSON.stringify({ ...settings, heroSliders }));
-  }, [settings, heroSliders]);
+  const clearAuth = () => {
+    localStorage.removeItem('adminAccessToken');
+    localStorage.removeItem('adminRefreshToken');
+    localStorage.removeItem('adminUser');
+    setAccessToken(null);
+    setAdminUser(null);
+    setIsAuthenticated(false);
+  };
 
-  useEffect(() => { localStorage.setItem('adminProducts', JSON.stringify(products)); }, [products]);
-  useEffect(() => { localStorage.setItem('adminCategories', JSON.stringify(categories)); }, [categories]);
-  useEffect(() => { localStorage.setItem('adminBrands', JSON.stringify(brands)); }, [brands]);
-  useEffect(() => { localStorage.setItem('adminOrders', JSON.stringify(orders)); }, [orders]);
-  useEffect(() => { localStorage.setItem('adminCustomers', JSON.stringify(customers)); }, [customers]);
-  useEffect(() => { localStorage.setItem('adminQuotes', JSON.stringify(quotes)); }, [quotes]);
-  useEffect(() => { localStorage.setItem('adminPincodes', JSON.stringify(pincodes)); }, [pincodes]);
-  useEffect(() => { localStorage.setItem('adminDeliveryBoys', JSON.stringify(deliveryBoys)); }, [deliveryBoys]);
-  useEffect(() => { localStorage.setItem('adminCoupons', JSON.stringify(coupons)); }, [coupons]);
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const result = await api.login(email, password);
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    const user = initialAdminUsers.find(u => u.email === email && u.password === password && u.active);
-    if (user) {
-      setIsAuthenticated(true);
-      setAdminUser(user);
-      localStorage.setItem('adminAuth', JSON.stringify(user));
-      localStorage.setItem('adminAuthTime', Date.now().toString());
-      return true;
+      if (result.success && result.data) {
+        setAccessToken(result.data.accessToken);
+        setAdminUser(result.data.admin as unknown as AdminUser);
+        setIsAuthenticated(true);
+
+        localStorage.setItem('adminAccessToken', result.data.accessToken);
+        localStorage.setItem('adminRefreshToken', result.data.refreshToken);
+        localStorage.setItem('adminUser', JSON.stringify(result.data.admin));
+
+        return { success: true };
+      }
+
+      return { success: false, error: result.error || 'Login failed' };
+    } catch (error) {
+      return { success: false, error: 'Network error. Please try again.' };
     }
-    return false;
   }, []);
 
   const logout = useCallback(() => {
-    setIsAuthenticated(false);
-    setAdminUser(null);
-    localStorage.removeItem('adminAuth');
-    localStorage.removeItem('adminAuthTime');
+    clearAuth();
     router.push('/admin-login');
   }, [router]);
 
-  const updateSettings = useCallback((newSettings: Partial<WebsiteSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
-  }, []);
+  const refreshData = useCallback(async () => {
+    if (!accessToken) return;
 
-  const addProduct = useCallback((product: Product) => { setProducts(prev => [...prev, product]); }, []);
-  const updateProduct = useCallback((id: string, product: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...product } : p));
-  }, []);
-  const deleteProduct = useCallback((id: string) => { setProducts(prev => prev.filter(p => p.id !== id)); }, []);
+    try {
+      const [categoriesRes, brandsRes, productsRes, quotesRes, contactsRes, testimonialsRes, settingsRes] = await Promise.all([
+        api.getCategories(),
+        api.getBrands(),
+        api.getProducts(),
+        api.getQuotes(accessToken),
+        api.getContacts(accessToken),
+        api.getTestimonialsAdmin(accessToken),
+        api.getSettings(),
+      ]);
 
-  const addCategory = useCallback((category: Category) => { setCategories(prev => [...prev, category]); }, []);
-  const updateCategory = useCallback((id: string, category: Partial<Category>) => {
-    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...category } : c));
-  }, []);
-  const deleteCategory = useCallback((id: string) => { setCategories(prev => prev.filter(c => c.id !== id)); }, []);
+      if (categoriesRes.success) setCategories(categoriesRes.data || []);
+      if (brandsRes.success) setBrands(brandsRes.data || []);
+      if (productsRes.success) setProducts(productsRes.data || []);
+      if (quotesRes.success) setQuotes(quotesRes.data || []);
+      if (contactsRes.success) setContacts(contactsRes.data || []);
+      if (testimonialsRes.success) setTestimonials(testimonialsRes.data || []);
+      if (settingsRes.success) setSettings(settingsRes.data || null);
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+    }
+  }, [accessToken]);
 
-  const addBrand = useCallback((brand: Brand) => { setBrands(prev => [...prev, brand]); }, []);
-  const updateBrand = useCallback((id: string, brand: Partial<Brand>) => {
-    setBrands(prev => prev.map(b => b.id === id ? { ...b, ...brand } : b));
-  }, []);
-  const deleteBrand = useCallback((id: string) => { setBrands(prev => prev.filter(b => b.id !== id)); }, []);
-
-  const updateOrder = useCallback((id: string, order: Partial<Order>) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...order, updatedAt: new Date().toISOString() } : o));
-  }, []);
-
-  const updateCustomer = useCallback((id: string, customer: Partial<Customer>) => {
-    setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...customer } : c));
-  }, []);
-
-  const updateQuote = useCallback((id: string, quote: Partial<Quote>) => {
-    setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...quote, updatedAt: new Date().toISOString() } : q));
-  }, []);
-  const deleteQuote = useCallback((id: string) => { setQuotes(prev => prev.filter(q => q.id !== id)); }, []);
-
-  const addPincode = useCallback((pincode: Pincode) => { setPincodes(prev => [...prev, pincode]); }, []);
-  const updatePincode = useCallback((id: string, pincode: Partial<Pincode>) => {
-    setPincodes(prev => prev.map(p => p.id === id ? { ...p, ...pincode } : p));
-  }, []);
-  const deletePincode = useCallback((id: string) => { setPincodes(prev => prev.filter(p => p.id !== id)); }, []);
-
-  const addDeliveryBoy = useCallback((boy: DeliveryBoy) => { setDeliveryBoys(prev => [...prev, boy]); }, []);
-  const updateDeliveryBoy = useCallback((id: string, boy: Partial<DeliveryBoy>) => {
-    setDeliveryBoys(prev => prev.map(b => b.id === id ? { ...b, ...boy } : b));
-  }, []);
-  const deleteDeliveryBoy = useCallback((id: string) => { setDeliveryBoys(prev => prev.filter(b => b.id !== id)); }, []);
-
-  const addCoupon = useCallback((coupon: Coupon) => { setCoupons(prev => [...prev, coupon]); }, []);
-  const updateCoupon = useCallback((id: string, coupon: Partial<Coupon>) => {
-    setCoupons(prev => prev.map(c => c.id === id ? { ...c, ...coupon } : c));
-  }, []);
-  const deleteCoupon = useCallback((id: string) => { setCoupons(prev => prev.filter(c => c.id !== id)); }, []);
-
-  const updateHeroSlider = useCallback((id: string, slider: Partial<HeroSlider>) => {
-    setHeroSliders(prev => prev.map(s => s.id === id ? { ...s, ...slider } : s));
-    setSettings(prev => ({ ...prev, heroSliders: prev.heroSliders.map(s => s.id === id ? { ...s, ...slider } : s) }));
-  }, []);
-
-  const addHeroSlider = useCallback((slider: HeroSlider) => {
-    setHeroSliders(prev => [...prev, slider]);
-    setSettings(prev => ({ ...prev, heroSliders: [...prev.heroSliders, slider] }));
-  }, []);
-
-  const deleteHeroSlider = useCallback((id: string) => {
-    setHeroSliders(prev => prev.filter(s => s.id !== id));
-    setSettings(prev => ({ ...prev, heroSliders: prev.heroSliders.filter(s => s.id !== id) }));
-  }, []);
+  // Refresh data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      refreshData();
+    }
+  }, [isAuthenticated, accessToken, refreshData]);
 
   return (
     <AdminContext.Provider value={{
-      isAuthenticated, adminUser, login, logout, settings, updateSettings,
-      products, addProduct, updateProduct, deleteProduct,
-      categories, addCategory, updateCategory, deleteCategory,
-      brands, addBrand, updateBrand, deleteBrand,
-      orders, updateOrder, customers, updateCustomer,
-      quotes, updateQuote, deleteQuote,
-      pincodes, addPincode, updatePincode, deletePincode,
-      deliveryBoys, addDeliveryBoy, updateDeliveryBoy, deleteDeliveryBoy,
-      coupons, addCoupon, updateCoupon, deleteCoupon,
-      heroSliders, updateHeroSlider, addHeroSlider, deleteHeroSlider,
+      isAuthenticated,
+      adminUser,
+      accessToken,
+      login,
+      logout,
+      settings,
+      products,
+      categories,
+      brands,
+      quotes,
+      contacts,
+      testimonials,
+      loading,
+      refreshData,
     }}>
       {children}
     </AdminContext.Provider>
@@ -231,6 +179,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
 export function useAdmin() {
   const context = useContext(AdminContext);
-  if (context === undefined) { throw new Error('useAdmin must be used within an AdminProvider'); }
+  if (context === undefined) {
+    throw new Error('useAdmin must be used within an AdminProvider');
+  }
   return context;
 }

@@ -1,10 +1,10 @@
-import { PrismaClient, AdminRole, QuoteStatus, InventoryReason, AdminRole as Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seed...');
+  console.log('Starting database seed...');
 
   // ============================================
   // Create Admin User
@@ -19,12 +19,12 @@ async function main() {
       email: process.env.ADMIN_EMAIL || 'admin@asiftraders.in',
       password: adminPassword,
       phone: process.env.ADMIN_PHONE || '+918879149174',
-      role: 'SUPER_ADMIN' as any,
+      role: 'SUPER_ADMIN',
       isActive: true,
       is2FAEnabled: false,
     },
   });
-  console.log('✅ Admin user created:', admin.email);
+  console.log('Admin user created:', admin.email);
 
   // ============================================
   // Create Categories
@@ -139,7 +139,7 @@ async function main() {
       },
     }),
   ]);
-  console.log('✅ Categories created:', categories.length);
+  console.log('Categories created:', categories.length);
 
   // ============================================
   // Create Brands
@@ -177,8 +177,7 @@ async function main() {
         website: 'https://www.tatasteel.com',
         isActive: true,
       },
-    },
-    ),
+    }),
     prisma.brand.upsert({
       where: { slug: 'sail' },
       update: {},
@@ -235,7 +234,7 @@ async function main() {
       },
     }),
   ]);
-  console.log('✅ Brands created:', brands.length);
+  console.log('Brands created:', brands.length);
 
   // ============================================
   // Create Products with Variants
@@ -306,13 +305,16 @@ async function main() {
       update: {},
       create: {
         ...productInfo,
+        features: JSON.stringify(productInfo.features),
+        tags: JSON.stringify(['best-seller']),
         isActive: true,
-        tags: ['best-seller'],
       },
     });
 
     // Create variants
     for (const variant of variants) {
+      const sku = `${product.slug}-${variant.size}`.toUpperCase().replace(/-/g, '').replace(/\s/g, '');
+
       await prisma.productVariant.upsert({
         where: {
           productId_size: {
@@ -327,7 +329,7 @@ async function main() {
           mrp: variant.mrp,
           sellingPrice: variant.sellingPrice,
           stock: Math.floor(Math.random() * 500) + 100,
-          sku: `${product.slug}-${variant.size}`.toUpperCase().replace(/-/g, ''),
+          sku: sku,
           isActive: true,
         },
       });
@@ -349,12 +351,12 @@ async function main() {
       }
     }
   }
-  console.log('✅ Products and variants created');
+  console.log('Products and variants created');
 
   // ============================================
   // Create Testimonials
   // ============================================
-  const testimonials = await Promise.all([
+  await Promise.all([
     prisma.testimonial.upsert({
       where: { id: 'testimonial-1' },
       update: {},
@@ -395,18 +397,18 @@ async function main() {
       },
     }),
   ]);
-  console.log('✅ Testimonials created:', testimonials.length);
+  console.log('Testimonials created');
 
   // ============================================
   // Create Settings
   // ============================================
-  const settings = await Promise.all([
+  await Promise.all([
     prisma.setting.upsert({
       where: { key: 'company_info' },
       update: {},
       create: {
         key: 'company_info',
-        value: {
+        value: JSON.stringify({
           name: 'ASIF TRADERS',
           tagline: 'Your Trusted Building Materials Partner',
           phone: ['+91 88791 49174', '+91 79773 71025', '+91 99199 51519'],
@@ -414,7 +416,7 @@ async function main() {
           email: 'info@asiftraders.in',
           address: 'Digha, Thane-Belapur Road, Navi Mumbai, Maharashtra',
           timings: { weekdays: '8:00 AM - 8:00 PM', sunday: '9:00 AM - 2:00 PM' },
-        },
+        }),
         description: 'Company contact and basic information',
       },
     }),
@@ -423,12 +425,12 @@ async function main() {
       update: {},
       create: {
         key: 'social_links',
-        value: {
+        value: JSON.stringify({
           whatsapp: 'https://wa.me/918879149174',
           phone: 'tel:+918879149174',
           email: 'mailto:info@asiftraders.in',
           map: 'https://maps.google.com/?q=Digha,Thane-Belapur+Road,Navi+Mumbai',
-        },
+        }),
         description: 'Social and contact links',
       },
     }),
@@ -437,11 +439,11 @@ async function main() {
       update: {},
       create: {
         key: 'delivery_info',
-        value: {
+        value: JSON.stringify({
           freeDeliveryThreshold: 5000,
           deliveryAreas: ['Navi Mumbai', 'Thane', 'Mumbai', 'Panvel'],
           estimatedDeliveryTime: 'Same day to 2 days',
-        },
+        }),
         description: 'Delivery configuration',
       },
     }),
@@ -450,21 +452,21 @@ async function main() {
       update: {},
       create: {
         key: 'quote_settings',
-        value: {
+        value: JSON.stringify({
           quoteValidityDays: 7,
           autoAssign: true,
           notificationEmails: ['admin@asiftraders.in'],
-        },
+        }),
         description: 'Quote request settings',
       },
     }),
   ]);
-  console.log('✅ Settings created');
+  console.log('Settings created');
 
   // ============================================
   // Create Sample Quote Requests
   // ============================================
-  const sampleQuotes = await Promise.all([
+  await Promise.all([
     prisma.quoteRequest.create({
       data: {
         referenceNo: 'QT001',
@@ -501,21 +503,21 @@ async function main() {
       },
     }),
   ]);
-  console.log('✅ Sample quote requests created');
+  console.log('Sample quote requests created');
 
   console.log('');
-  console.log('🎉 Database seed completed successfully!');
+  console.log('Database seed completed successfully!');
   console.log('');
-  console.log('📋 Admin Login Details:');
-  console.log('   Email:', process.env.ADMIN_EMAIL || 'admin@asiftraders.in');
-  console.log('   Password:', process.env.ADMIN_PASSWORD || 'Admin@123');
+  console.log('Admin Login Details:');
+  console.log('Email:', process.env.ADMIN_EMAIL || 'admin@asiftraders.in');
+  console.log('Password:', process.env.ADMIN_PASSWORD || 'Admin@123');
   console.log('');
-  console.log('⚠️  Please change the admin password after first login!');
+  console.log('Please change the admin password after first login!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed error:', e);
+    console.error('Seed error:', e);
     process.exit(1);
   })
   .finally(async () => {

@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { Request, Response, NextFunction } from 'express';
 
 const { combine, timestamp, printf, colorize } = winston.format;
 
@@ -24,18 +25,21 @@ export const logger = winston.createLogger({
         logFormat
       ),
     }),
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-    }),
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-    }),
   ],
 });
 
-// Create logs directory if it doesn't exist
-import fs from 'fs';
-if (!fs.existsSync('logs')) {
-  fs.mkdirSync('logs');
-}
+// Express middleware for request logging
+export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info(`${req.method} ${req.path}`, {
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      duration: `${duration}ms`,
+      ip: req.ip,
+    });
+  });
+  next();
+};

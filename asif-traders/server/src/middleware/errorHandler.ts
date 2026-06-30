@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodError } from 'zod';
 import { logger } from '../utils/logger.js';
 
 export class AppError extends Error {
@@ -56,18 +55,6 @@ export const errorHandler = (
     method: req.method,
     ip: req.ip,
   });
-
-  // Handle Zod validation errors
-  if (err instanceof ZodError) {
-    return res.status(400).json({
-      success: false,
-      error: 'Validation failed',
-      details: err.errors.map((e) => ({
-        field: e.path.join('.'),
-        message: e.message,
-      })),
-    });
-  }
 
   // Handle Prisma errors
   if (err.name === 'PrismaClientKnownRequestError') {

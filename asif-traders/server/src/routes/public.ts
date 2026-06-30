@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { PrismaClient, QuoteStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { body, validationResult } from 'express-validator';
 import { v4 as uuidv4 } from 'uuid';
 import slugify from 'slugify';
 import { AppError, ValidationError } from '../middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
-const router = Router();
+const router: Router = Router();
 const prisma = new PrismaClient();
 
 // Validation helper
@@ -14,8 +14,8 @@ const validateRequest = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new ValidationError('Validation failed',
-      errors.array().reduce((acc, err) => {
-        const field = err.path.join('.');
+      errors.array().reduce((acc, err: any) => {
+        const field = err.path || 'unknown';
         acc[field] = [...(acc[field] || []), err.msg];
         return acc;
       }, {} as Record<string, string[]>)
@@ -326,7 +326,7 @@ router.get('/products/:slug', async (req: Request, res: Response, next: NextFunc
         data: {
           eventType: 'PRODUCT_VIEW',
           sourceUrl: req.originalUrl,
-          metadata: { productId: product.id, productName: product.name },
+          metadata: JSON.stringify({ productId: product.id, productName: product.name }),
           ipAddress: req.ip,
           userAgent: req.headers['user-agent'],
         },
@@ -423,7 +423,7 @@ router.post('/quotes', [
       data: {
         userId: user.id,
         eventType: 'QUOTE_SUBMIT',
-        metadata: { quoteId: quote.id, referenceNo: quote.referenceNo },
+        metadata: JSON.stringify({ quoteId: quote.id, referenceNo: quote.referenceNo }),
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       },
@@ -543,7 +543,7 @@ router.post('/contact', [
       data: {
         userId: user.id,
         eventType: 'CONTACT_SUBMIT',
-        metadata: { submissionId: submission.id },
+        metadata: JSON.stringify({ submissionId: submission.id }),
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       },
@@ -689,7 +689,7 @@ router.get('/search', async (req: Request, res: Response, next: NextFunction) =>
       data: {
         eventType: 'SEARCH',
         sourceUrl: req.originalUrl,
-        metadata: { query: q, resultCount: products.length },
+        metadata: JSON.stringify({ query: q, resultCount: products.length }),
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
       },

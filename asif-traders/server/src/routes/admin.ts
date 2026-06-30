@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { PrismaClient, QuoteStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AppError, UnauthorizedError, ForbiddenError, ValidationError } from '../middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
-const router = Router();
+const router: Router = Router();
 const prisma = new PrismaClient();
 
 // ============================================
@@ -55,12 +55,12 @@ const requireRole = (...roles: string[]) => {
 };
 
 // Log activity helper
-const logActivity = async (adminId: string, action: string, details?: any) => {
+const logActivity = async (adminId: string, action: string, details?: any, req?: Request) => {
   await prisma.adminActivityLog.create({
     data: {
       adminId,
       action,
-      details,
+      details: details ? JSON.stringify(details) : null,
       ipAddress: req?.ip,
       userAgent: req?.headers?.['user-agent'],
     },
@@ -72,8 +72,8 @@ const validateRequest = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new ValidationError('Validation failed',
-      errors.array().reduce((acc, err) => {
-        const field = err.path.join('.');
+      errors.array().reduce((acc, err: any) => {
+        const field = err.path || 'unknown';
         acc[field] = [...(acc[field] || []), err.msg];
         return acc;
       }, {} as Record<string, string[]>)
@@ -736,7 +736,7 @@ router.put('/quotes/:id', authenticate, async (req: Request, res: Response, next
     const quote = await prisma.quoteRequest.update({
       where: { id: req.params.id },
       data: {
-        ...(status && { status: status as QuoteStatus }),
+        ...(status && { status }),
         ...(totalAmount !== undefined && { totalAmount }),
         ...(validUntil && { validUntil: new Date(validUntil) }),
       },

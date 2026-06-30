@@ -52,24 +52,21 @@ export default function AdminLoginPage() {
 
     setIsLoading(true);
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const result = await login(email, password);
 
-    const success = await login(email, password);
-
-    if (success) {
+    if (result.success) {
       router.push('/admin-dashboard');
     } else {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
-      
+
       if (newAttempts >= 5) {
         const lockTime = Date.now() + 15 * 60 * 1000; // 15 minutes
         setLockUntil(lockTime);
         localStorage.setItem('adminLockUntil', lockTime.toString());
         setError('Too many failed attempts. Account locked for 15 minutes.');
       } else {
-        setError(`Invalid credentials. ${5 - newAttempts} attempts remaining.`);
+        setError(result.error || `Invalid credentials. ${5 - newAttempts} attempts remaining.`);
       }
     }
 
@@ -198,8 +195,8 @@ export default function AdminLoginPage() {
           <div className="mt-6 p-4 bg-gray-50 rounded-xl">
             <p className="text-xs text-gray-500 text-center mb-2">Test Credentials:</p>
             <div className="text-xs text-gray-600 space-y-1">
-              <p><span className="font-medium">Email:</span> admin@asiftraders.com</p>
-              <p><span className="font-medium">Password:</span> AsifTraders@2024</p>
+              <p><span className="font-medium">Email:</span> admin@asiftraders.in</p>
+              <p><span className="font-medium">Password:</span> Admin@123</p>
             </div>
           </div>
         </div>

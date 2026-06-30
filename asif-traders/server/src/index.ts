@@ -3,12 +3,16 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { logger } from './utils/logger.js';
+import { requestLogger } from './utils/logger.js';
+
+// __dirname for ESM compatibility
+const __dirname = path.resolve();
 
 // Initialize Express app
 const app = express();
@@ -53,7 +57,7 @@ const authLimiter = rateLimit({
 app.use('/api/v1/auth', authLimiter);
 
 // Request logging
-app.use(logger);
+app.use(requestLogger);
 
 // ============================================
 // Routes
@@ -68,6 +72,9 @@ app.get('/health', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1', publicRoutes);
 app.use('/api/v1/admin', adminRoutes);
+
+// Serve static admin panel
+app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
 
 // ============================================
 // Error Handler
