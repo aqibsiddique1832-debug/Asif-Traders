@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { categories } from '@/data/products';
 import { Phone, Mail, Clock, MapPin, MessageCircle } from 'lucide-react';
 
+const currentYear = new Date().getFullYear();
+
 export default function Footer() {
   return (
     <footer className="bg-charcoal text-white">
@@ -161,7 +163,7 @@ export default function Footer() {
       <div className="border-t border-gray-700">
         <div className="container py-3 lg:py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 lg:gap-4 text-xs lg:text-sm text-gray-500">
-            <p>© 2024 ASIF TRADERS. All rights reserved.</p>
+            <p>© {currentYear} ASIF TRADERS. All rights reserved.</p>
             <div className="flex items-center gap-4 lg:gap-6">
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>

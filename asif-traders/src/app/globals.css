@@ -62,7 +62,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.01em;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Brand Terracotta */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -73,23 +73,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #B6452C;
+  background: #E85D04;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #8C3420;
+  background: #D35400;
 }
 
 /* Selection */
 ::selection {
-  background: #B6452C;
+  background: #E85D04;
   color: white;
 }
 
 /* Focus Styles */
 :focus-visible {
-  outline: 2px solid #B6452C;
+  outline: 2px solid #E85D04;
   outline-offset: 2px;
 }
 

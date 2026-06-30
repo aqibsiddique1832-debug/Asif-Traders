@@ -117,8 +117,18 @@ function ProductCard({ product, onAddToCart }: { product: typeof products[0]; on
   return (
     <div className="card overflow-hidden group">
       <Link href={`/product/${product.slug}/`}>
-        <div className="relative aspect-square bg-sandstone overflow-hidden">
-          <div className="absolute inset-0 img-placeholder flex items-center justify-center text-terracotta/20">
+        <div className="relative aspect-square bg-white overflow-hidden">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-contain p-4 filter drop-shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-xl"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+          {/* Fallback placeholder */}
+          <div className="absolute inset-0 img-placeholder hidden flex items-center justify-center">
             <div className="w-20 h-20 bg-sandstone/50 rounded-full" />
           </div>
           {defaultVariant.discountPercent > 0 && (
@@ -126,7 +136,7 @@ function ProductCard({ product, onAddToCart }: { product: typeof products[0]; on
               {Math.round(defaultVariant.discountPercent)}% OFF
             </span>
           )}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
         </div>
       </Link>
 
