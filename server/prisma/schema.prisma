@@ -1,0 +1,654 @@
+// ============================================
+// ASIF TRADERS - Database Schema (SQLite)
+// Phase 3: Commerce Maturity
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User Management
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  phone         String    @unique
+  gstin         String?
+  isPhoneVerified Boolean @default(false)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  quoteRequests    QuoteRequest[]
+  contactSubmissions ContactSubmission[]
+  leadEvents       LeadEvent[]
+  orders           Order[]
+  addresses        Address[]
+  cart            Cart?
+  testimonials    Testimonial[]
+  otpRequests     OtpRequest[]
+
+  @@index([phone])
+  @@index([email])
+}
+
+model AdminUser {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  password      String
+  phone         String?
+  role          String    @default("ADMIN") // SUPER_ADMIN, ADMIN, MANAGER, STAFF
+  isActive      Boolean   @default(true)
+  is2FAEnabled  Boolean   @default(false)
+  twoFASecret   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relations
+  quoteRequests QuoteRequest[]  @relation("AssignedQuotes")
+  activityLogs  AdminActivityLog[]
+  refunds       PaymentRefund[]
+
+  @@index([email])
+}
+
+model AdminActivityLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  action      String
+  entityType  String?
+  entityId    String?
+  details     String?  // JSON stored as string in SQLite
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  admin       AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+// ============================================
+// OTP Authentication (Phase 2)
+// ============================================
+
+model OtpRequest {
+  id           String   @id @default(uuid())
+  phone        String
+  otpHash      String   // bcrypt hashed OTP
+  expiresAt    DateTime
+  attempts     Int      @default(0)
+  isVerified   Boolean  @default(false)
+  isUsed       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user         User?    @relation(fields: [userId], references: [id])
+  userId       String?
+
+  @@index([phone])
+  @@index([expiresAt])
+}
+
+// ============================================
+// Product Management
+// ============================================
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  image       String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  products    Product[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model Brand {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  logo        String?
+  website     String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  products    Product[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  features       String   @default("[]")  // JSON array stored as string
+  specifications String?  // JSON object stored as string
+  unit           String   @default("pieces")
+  categoryId     String
+  brandId        String?
+  isFeatured     Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  tags           String   @default("[]")  // JSON array stored as string
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  category    Category         @relation(fields: [categoryId], references: [id])
+  brand       Brand?          @relation(fields: [brandId], references: [id])
+  variants    ProductVariant[]
+  images      ProductImage[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([isFeatured])
+  @@index([isActive])
+}
+
+model ProductVariant {
+  id            String   @id @default(uuid())
+  productId     String
+  size          String
+  mrp           Float    @default(0)  // SQLite uses Float for decimal
+  sellingPrice  Float    @default(0)
+  stock         Int      @default(0)
+  sku           String?  @unique
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryLogs InventoryLog[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  quoteItems    QuoteRequestItem[]
+
+  @@unique([productId, size])
+  @@index([sku])
+}
+
+model ProductImage {
+  id          String   @id @default(uuid())
+  productId   String
+  url         String
+  altText     String?
+  isPrimary   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model InventoryLog {
+  id          String   @id @default(uuid())
+  variantId   String
+  change      Int      // positive for add, negative for remove
+  reason      String   // INITIAL_STOCK, PURCHASE, SALE, RETURN, ADJUSTMENT, DAMAGED, EXPIRED
+  referenceId String?
+  notes       String?
+  adminId     String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  variant     ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([variantId])
+  @@index([createdAt])
+}
+
+// ============================================
+// Cart & Cart Items (Phase 2)
+// ============================================
+
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String?   @unique  // One cart per logged-in user
+  sessionId String?   // For guest carts
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user  User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  variantId String
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  cart    Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant   @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, variantId])
+  @@index([cartId])
+}
+
+// ============================================
+// Orders (Phase 2)
+// ============================================
+
+model Order {
+  id              String    @id @default(uuid())
+  orderNumber     String    @unique  // e.g., AT-2026-00001
+  userId          String
+  status          String    @default("PENDING") // PENDING, CONFIRMED, PROCESSING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
+  subtotal        Float     @default(0)
+  gstAmount       Float     @default(0)
+  deliveryCharge  Float     @default(0)
+  totalAmount     Float     @default(0)
+  deliveryAddress String    // JSON stored as string
+  paymentStatus   String    @default("UNPAID") // UNPAID, PAID, PARTIAL, REFUNDED
+  paymentMethod   String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user     User        @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+  payment  Payment?
+  invoice  Invoice?
+  whatsAppLogs WhatsAppLog[]
+
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id                  String   @id @default(uuid())
+  orderId             String
+  variantId           String?
+  productNameSnapshot  String
+  variantSizeSnapshot  String?
+  hsnCode             String?
+  quantity            Int
+  unitPriceSnapshot   Float
+  gstPercentSnapshot   Float    @default(18)  // Default 18% GST
+  lineTotal           Float
+  createdAt           DateTime @default(now())
+
+  // Relations
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+// ============================================
+// Payments (Phase 3)
+// ============================================
+
+model Payment {
+  id                   String   @id @default(uuid())
+  orderId              String   @unique
+  gateway              String   @default("razorpay")  // razorpay, razorpay_test
+  gatewayOrderId       String?  // Razorpay order ID
+  gatewayPaymentId     String?  // Set after payment
+  gatewayRefundId      String?  // Set after refund
+  gatewaySignature     String?  // For verification
+  amount               Float    // Amount in INR (not paise)
+  currency             String   @default("INR")
+  status               String   @default("created")  // created, authorized, captured, failed, refunded, partial_refund
+  method               String?  // upi, card, netbanking, wallet, cash
+  errorCode            String?
+  errorDescription     String?
+  notes                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refunds   PaymentRefund[]
+
+  @@index([gatewayOrderId])
+  @@index([gatewayPaymentId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PaymentRefund {
+  id               String   @id @default(uuid())
+  paymentId        String
+  amount           Float    // Refund amount
+  status           String   @default("initiated")  // initiated, processing, completed, failed
+  gatewayRefundId  String?  // Razorpay refund ID
+  reason           String?
+  initiatedById    String?  // Admin who initiated
+  processedAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  payment    Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  initiatedBy AdminUser? @relation(fields: [initiatedById], references: [id])
+
+  @@index([paymentId])
+  @@index([status])
+}
+
+// ============================================
+// Invoices (Phase 3)
+// GST-compliant invoice storage
+// ============================================
+
+model Invoice {
+  id              String   @id @default(uuid())
+  orderId         String   @unique
+  invoiceNumber   String   @unique  // Format: AT/2026-27/0001
+  invoiceDate     DateTime @default(now())
+  // GST breakdown stored as JSON string in SQLite
+  subtotal        Float    // Pre-tax amount
+  cgstAmount      Float    @default(0)
+  sgstAmount      Float    @default(0)
+  igstAmount      Float    @default(0)
+  totalGst        Float    @default(0)
+  totalAmount     Float    // Grand total
+  // Delivery address snapshot for invoice
+  customerName    String?
+  customerAddress String?
+  customerGstin  String?
+  gstRate         Float    @default(18)  // Overall GST rate
+  isIgst          Boolean  @default(false)  // True if inter-state
+  pdfUrl          String?  // Cloudinary/S3 URL
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceNumber])
+  @@index([createdAt])
+}
+
+// ============================================
+// Pincodes (Phase 3)
+// Delivery serviceability
+// ============================================
+
+model Pincode {
+  id              String   @id @default(uuid())
+  pincode         String   @unique  // e.g., "400708"
+  areaName        String   // e.g., "Airoli"
+  city            String   @default("Navi Mumbai")
+  state           String   @default("Maharashtra")
+  isServiceable   Boolean  @default(true)
+  deliveryDays    Int      @default(2)  // Estimated delivery days
+  deliveryCharge  Float    @default(0)  // 0 = free delivery
+  isFreeDelivery  Boolean  @default(true)  // Override for free delivery threshold
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([pincode])
+  @@index([isServiceable])
+  @@index([city])
+}
+
+// ============================================
+// WhatsApp Logs (Phase 3)
+// Transactional message tracking
+// ============================================
+
+model WhatsAppLog {
+  id              String   @id @default(uuid())
+  recipientPhone   String   // +91XXXXXXXXXX format
+  templateName     String   // Template identifier
+  templateVariables String?  // JSON string of variables
+  relatedOrderId   String?
+  relatedQuoteId   String?
+  messageContent   String?  // Actual message sent
+  status           String   @default("pending")  // pending, sent, delivered, read, failed, bounced
+  providerMessageId String? // Meta/Interakt message ID
+  errorCode        String?
+  errorMessage     String?
+  sentAt           DateTime?
+  deliveredAt      DateTime?
+  readAt           DateTime?
+  createdAt        DateTime @default(now())
+
+  // Relations
+  relatedOrder  Order?        @relation(fields: [relatedOrderId], references: [id])
+  relatedQuote  QuoteRequest? @relation(fields: [relatedQuoteId], references: [id])
+
+  @@index([recipientPhone])
+  @@index([status])
+  @@index([createdAt])
+  @@index([relatedOrderId])
+}
+
+// ============================================
+// Invoice Sequence (Phase 3)
+// Ensures sequential invoice numbering
+// ============================================
+
+model InvoiceSequence {
+  id              String   @id @default(uuid())
+  financialYear   String   @unique  // e.g., "2026-27"
+  lastSequence    Int      @default(0)
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// Addresses (Phase 2)
+// ============================================
+
+model Address {
+  id            String   @id @default(uuid())
+  userId        String
+  name          String   // Contact name
+  phone         String   // Contact phone
+  addressLine1  String   // Primary address
+  addressLine2  String?  // Optional secondary address
+  city          String
+  state         String   @default("Maharashtra")
+  pincode       String
+  addressType   String   @default("home")  // home, office, other
+  isDefault     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+// ============================================
+// Quote & Order Management
+// ============================================
+
+model QuoteRequest {
+  id              String    @id @default(uuid())
+  referenceNo     String    @unique  // QT + timestamp
+  userId          String?
+  userName        String
+  userPhone       String
+  userEmail       String?
+  gstin           String?
+  notes           String?
+  status          String    @default("PENDING") // PENDING, REVIEWING, QUOTED, ACCEPTED, REJECTED, EXPIRED, CONVERTED
+  assignedToId    String?
+  totalAmount     Float?
+  validUntil      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user       User?        @relation(fields: [userId], references: [id])
+  assignedTo AdminUser?    @relation("AssignedQuotes", fields: [assignedToId], references: [id])
+  items      QuoteRequestItem[]
+  events     QuoteEvent[]
+  whatsAppLogs WhatsAppLog[]
+
+  @@index([referenceNo])
+  @@index([status])
+  @@index([createdAt])
+  @@index([userPhone])
+}
+
+model QuoteRequestItem {
+  id            String   @id @default(uuid())
+  quoteId       String
+  productId     String?
+  variantId     String?
+  productName   String   // Store name in case product is deleted
+  variantSize   String?
+  quantity      Int
+  unit          String?
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  quote         QuoteRequest @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([quoteId])
+}
+
+model QuoteEvent {
+  id          String   @id @default(uuid())
+  quoteId     String
+  eventType   String
+  oldStatus   String?
+  newStatus   String?
+  notes       String?
+  adminId     String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  quote       QuoteRequest @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+}
+
+// ============================================
+// Contact & Feedback
+// ============================================
+
+model ContactSubmission {
+  id           String   @id @default(uuid())
+  userId       String?
+  name         String
+  phone        String
+  email        String?
+  subject      String?
+  message      String
+  status       String   @default("NEW") // NEW, IN_PROGRESS, RESOLVED, CLOSED
+  assignedToId String?
+  response     String?
+  respondedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user       User?       @relation(fields: [userId], references: [id])
+  leadEvents LeadEvent[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Testimonial {
+  id            String   @id @default(uuid())
+  customerName  String
+  companyName   String?
+  location      String?
+  rating        Int      @default(5)
+  content       String
+  image         String?
+  isApproved    Boolean  @default(false)
+  isFeatured    Boolean  @default(false)
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+  userId String?
+
+  @@index([isApproved])
+  @@index([isFeatured])
+}
+
+// ============================================
+// Lead Tracking
+// ============================================
+
+model LeadEvent {
+  id                String   @id @default(uuid())
+  userId            String?
+  eventType         String   // PAGE_VIEW, PRODUCT_VIEW, CATEGORY_VIEW, SEARCH, ADD_TO_CART, REMOVE_FROM_CART, QUOTE_START, QUOTE_SUBMIT, CONTACT_SUBMIT, CALL_CLICK, WHATSAPP_CLICK, FACEBOOK_CLICK, INSTAGRAM_CLICK, MAP_CLICK, OTP_REQUEST, OTP_VERIFY, ORDER_PLACED, ORDER_CONFIRMED
+  source            String?
+  sourceUrl         String?
+  metadata          String?  // JSON stored as string
+  ipAddress         String?
+  userAgent         String?
+  contactSubmissionId String?
+  createdAt         DateTime @default(now())
+
+  // Relations
+  user              User?              @relation(fields: [userId], references: [id])
+  contactSubmission ContactSubmission? @relation(fields: [contactSubmissionId], references: [id])
+
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+// ============================================
+// Settings & Configuration
+// ============================================
+
+model Setting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   // JSON stored as string in SQLite
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
