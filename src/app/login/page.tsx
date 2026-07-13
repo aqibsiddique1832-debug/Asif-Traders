@@ -30,9 +30,9 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      router.push(redirectUrl);
+      window.location.replace(redirectUrl);
     }
-  }, [user, isLoading, router, redirectUrl]);
+  }, [user, isLoading, redirectUrl]);
 
   // Clear field error when user types
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +95,8 @@ export default function LoginPage() {
         showToast('Login successful!', 'success');
         // Small delay for success animation before redirect
         setTimeout(() => {
-          router.push(redirectUrl);
+          // Use window.location.replace for reliable navigation across deployments
+          window.location.replace(redirectUrl);
         }, 500);
       } else {
         // Update attempts remaining (simulate rate limiting)

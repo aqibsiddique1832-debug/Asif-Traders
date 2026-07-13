@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
+import { useAuth } from '@/context/AuthContext';
 import { products } from '@/data/products';
+import { addressesApi, ordersApi, tokenStore } from '@/lib/backendApi';
+import { toBackendId } from '@/lib/productIdMap';
 import {
   MapPin,
   Phone,
@@ -89,6 +92,7 @@ export default function CheckoutPage() {
   const { items, getCartCount, clearCart } = useCart();
   const { showToast } = useToast();
   const { location, isLocationSet } = useLocation();
+  const { user } = useAuth();
 
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -146,8 +150,94 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
 
-    // Simulate order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const isLoggedIn = !!tokenStore.getToken() && !!user;
+
+    // Try backend integration first if user is logged in
+    if (isLoggedIn) {
+      try {
+        // 1) Create or find address
+        const addrPayload: any = {
+          fullName: address.name,
+          phone: address.phone,
+          addressLine1: address.address,
+          addressLine2: address.landmark,
+          city: location?.city || 'Navi Mumbai',
+          state: 'Maharashtra',
+          pincode: address.pincode,
+          addressType: addressType === 'home' ? 'HOME' : addressType === 'office' ? 'OFFICE' : 'OTHER',
+          isDefault: false,
+        };
+
+        // Try to create a new address; on failure, fall back to any existing
+        let addressId: string | null = null;
+        const created: any = await addressesApi.create(addrPayload);
+        if (created && (created.id || (created as any).addressId)) {
+          addressId = (created as any).id || (created as any).addressId;
+        } else {
+          // Fallback: list existing addresses and pick first
+          const list: any = await addressesApi.list();
+          const listArr: any[] = Array.isArray(list) ? list : (list?.addresses || []);
+          if (listArr.length > 0) addressId = listArr[0].id;
+        }
+
+        if (!addressId) throw new Error('No address available');
+
+        // 2) Map V1 cart items to backend productIds
+        const orderItems = cartDetails.map((item) => ({
+          productId: toBackendId(item.productId),
+          quantity: item.quantity,
+        }));
+
+        // 3) Create order
+        const paymentMethodCode = paymentMethod === 'cod' ? 'COD' : paymentMethod === 'upi' ? 'UPI' : 'BANK_TRANSFER';
+        const orderResult: any = await ordersApi.create({
+          items: orderItems,
+          addressId,
+          paymentMethod: paymentMethodCode as any,
+        });
+
+        if (orderResult && (orderResult.orderNumber || orderResult.id)) {
+          const newOrderId = orderResult.id || `AT${Date.now()}`;
+          const newOrderNumber = orderResult.orderNumber || `AT2026-${Date.now().toString().slice(-5)}`;
+
+          // Also save to localStorage for /orders page
+          const orderData: SavedOrder = {
+            id: newOrderId,
+            orderNumber: newOrderNumber,
+            items: cartDetails.map(item => ({
+              productId: item.productId,
+              productName: item.product?.name || '',
+              variantSize: item.variant?.size || '',
+              quantity: item.quantity,
+              unitPrice: item.variant?.sellingPrice || 0,
+              lineTotal: item.subtotal,
+            })),
+            address: { ...address },
+            paymentMethod,
+            subtotal: totalAmount,
+            deliveryCharge: 0,
+            totalAmount,
+            status: orderResult.status || 'PENDING',
+            createdAt: orderResult.createdAt || new Date().toISOString(),
+          };
+          saveOrder(orderData);
+
+          setOrderId(newOrderId);
+          setOrderNumber(newOrderNumber);
+          setOrderPlaced(true);
+          clearCart();
+          setIsProcessing(false);
+          showToast('Order placed successfully!', 'success');
+          return;
+        }
+      } catch (e) {
+        console.warn('[Checkout] Backend order placement failed, falling back to local:', e);
+        // Fall through to local flow below
+      }
+    }
+
+    // Local fallback (guest checkout or backend failure)
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     const newOrderId = `AT${Date.now().toString(36).toUpperCase()}`;
     const newOrderNumber = `AT-2026-${Date.now().toString().slice(-5)}`;

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { addressesApi, tokenStore } from '@/lib/backendApi';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import {
@@ -51,14 +52,40 @@ export default function AddressesPage() {
     addressType: 'home',
   });
 
-  // Load addresses from localStorage
+  // Load addresses from backend (with localStorage fallback)
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login?redirect=/addresses');
       return;
     }
 
-    if (user) {
+    if (!user) return;
+    const load = async () => {
+      // Load from backend first if logged in
+      if (tokenStore.getToken()) {
+        try {
+          const list: any = await addressesApi.list();
+          const arr: any[] = Array.isArray(list) ? list : (list?.addresses || []);
+          if (arr.length > 0) {
+            setAddresses(arr.map((a: any) => ({
+              id: a.id,
+              name: a.fullName || a.name || '',
+              phone: a.phone || '',
+              addressLine1: a.addressLine1 || a.address || '',
+              addressLine2: a.addressLine2 || a.landmark || '',
+              city: a.city || '',
+              state: a.state || 'Maharashtra',
+              pincode: a.pincode || '',
+              isDefault: !!a.isDefault,
+              addressType: (a.addressType || 'home').toLowerCase(),
+            })));
+            return;
+          }
+        } catch (e) {
+          console.warn('[Addresses] Failed to load from backend, using local:', e);
+        }
+      }
+      // Fallback to localStorage
       const saved = localStorage.getItem(`asif_addresses_${user.id}`);
       if (saved) {
         try {
@@ -67,10 +94,11 @@ export default function AddressesPage() {
           setAddresses([]);
         }
       }
-    }
+    };
+    load();
   }, [user, isLoading, router]);
 
-  // Save addresses to localStorage
+  // Save addresses to backend (with localStorage fallback)
   const saveAddresses = (newAddresses: Address[]) => {
     if (user) {
       localStorage.setItem(`asif_addresses_${user.id}`, JSON.stringify(newAddresses));
@@ -94,7 +122,7 @@ export default function AddressesPage() {
     setShowForm(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate pincode format
@@ -110,17 +138,53 @@ export default function AddressesPage() {
     }
 
     if (editingId) {
-      // Update existing address
+      // Update existing address — try backend first
+      if (tokenStore.getToken()) {
+        try {
+          await addressesApi.update(editingId, {
+            fullName: formData.name,
+            phone: formData.phone,
+            addressLine1: formData.addressLine1,
+            addressLine2: formData.addressLine2,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            isDefault: formData.isDefault,
+            addressType: (formData.addressType || 'home').toUpperCase(),
+          });
+        } catch (e) {
+          console.warn('[Addresses] Backend update failed, saving locally:', e);
+        }
+      }
       const updated = addresses.map(addr =>
         addr.id === editingId ? { ...formData, id: editingId } : addr
       );
       saveAddresses(updated);
       showToast('Address updated successfully', 'success');
     } else {
-      // Create new address
+      // Create new address — try backend first
+      let newId = Date.now().toString();
+      if (tokenStore.getToken()) {
+        try {
+          const created: any = await addressesApi.create({
+            fullName: formData.name,
+            phone: formData.phone,
+            addressLine1: formData.addressLine1,
+            addressLine2: formData.addressLine2,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            isDefault: formData.isDefault,
+            addressType: (formData.addressType || 'home').toUpperCase(),
+          });
+          if (created && created.id) newId = created.id;
+        } catch (e) {
+          console.warn('[Addresses] Backend create failed, saving locally:', e);
+        }
+      }
       const newAddress: Address = {
         ...formData,
-        id: Date.now().toString(),
+        id: newId,
       };
 
       // If this is set as default, unset others
@@ -152,8 +216,15 @@ export default function AddressesPage() {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this address?')) {
+      if (tokenStore.getToken()) {
+        try {
+          await addressesApi.remove(id);
+        } catch (e) {
+          console.warn('[Addresses] Backend delete failed:', e);
+        }
+      }
       const filtered = addresses.filter(addr => addr.id !== id);
 
       // If deleted was default, set first as default

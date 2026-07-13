@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authApi, tokenStore } from '@/lib/backendApi';
 
 interface User {
   id: string;
@@ -21,106 +22,100 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Demo users - in production, this would be handled by backend
-const DEMO_USERS = [
-  {
-    id: '1',
-    email: 'demo@asiftraders.com',
-    password: 'demo123',
-    phone: '+91 79775 72727',
-    name: 'Demo User',
-  },
-  {
-    id: '2',
-    email: 'contractor@example.com',
-    password: 'contractor123',
-    phone: '+91 98765 43210',
-    name: 'Rajesh Contractor',
-  },
-];
+const USER_KEY = 'asif_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem('asif_user');
-      if (savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-        } catch (e) {
-          console.error('Failed to parse user:', e);
-        }
-      }
-      setIsLoading(false);
+    if (typeof window === 'undefined') return;
+    try {
+      const savedUser = localStorage.getItem(USER_KEY);
+      if (savedUser) setUser(JSON.parse(savedUser));
+    } catch (e) {
+      console.error('Failed to parse user:', e);
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock login - accept demo credentials
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const foundUser = DEMO_USERS.find(
-          u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-        );
-
-        if (foundUser) {
-          const userData: User = {
-            id: foundUser.id,
-            phone: foundUser.phone,
-            email: foundUser.email,
-            name: foundUser.name,
-          };
-          setUser(userData);
-          localStorage.setItem('asif_user', JSON.stringify(userData));
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      }, 500);
-    });
+    try {
+      const data = await authApi.login(email, password);
+      if (!data || !(data as any).user) return false;
+      const u = (data as any).user;
+      const userData: User = {
+        id: u.id,
+        phone: u.phone || '',
+        email: u.email,
+        name: u.firstName ? `${u.firstName} ${u.lastName || ''}`.trim() : u.name,
+        gstin: u.gstin,
+      };
+      setUser(userData);
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      return true;
+    } catch (e) {
+      console.error('Login error:', e);
+      return false;
+    }
   };
 
   const register = async (data: { name: string; email: string; phone: string; password: string }): Promise<boolean> => {
-    // Mock registration - in production, this would call backend API
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const userData: User = {
-          id: Date.now().toString(),
-          phone: data.phone,
-          email: data.email,
-          name: data.name,
-        };
-        setUser(userData);
-        localStorage.setItem('asif_user', JSON.stringify(userData));
-        resolve(true);
-      }, 500);
-    });
+    try {
+      const [firstName, ...rest] = data.name.trim().split(/\s+/);
+      const lastName = rest.join(' ');
+      const payload = {
+        firstName,
+        lastName: lastName || undefined,
+        email: data.email,
+        phone: data.phone.replace(/^\+91\s*/, '').replace(/\D/g, ''),
+        password: data.password,
+        confirmPassword: data.password,
+        agreedToTerms: true,
+      };
+      const result = await authApi.register(payload);
+      if (!result || !(result as any).user) return false;
+      const u = (result as any).user;
+      const userData: User = {
+        id: u.id,
+        phone: u.phone || data.phone,
+        email: u.email,
+        name: data.name,
+      };
+      setUser(userData);
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      return true;
+    } catch (e) {
+      console.error('Register error:', e);
+      return false;
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('asif_user');
+    localStorage.removeItem(USER_KEY);
+    authApi.logout();
   };
 
   const updateProfile = (data: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...data };
       setUser(updatedUser);
-      localStorage.setItem('asif_user', JSON.stringify(updatedUser));
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
     }
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isLoading,
-      login,
-      register,
-      logout,
-      updateProfile
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        login,
+        register,
+        logout,
+        updateProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

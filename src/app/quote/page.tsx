@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
+import { quotesApi, tokenStore } from '@/lib/backendApi';
+import { toBackendId } from '@/lib/productIdMap';
 import { products } from '@/data/products';
 import {
   ChevronRight,
@@ -154,6 +156,24 @@ export default function QuotePage() {
     clearCart();
     setIsSubmitting(false);
     showToast('Quote request submitted! We will call you within 2 hours.', 'success');
+
+    // Try backend submission if logged in
+    if (tokenStore.getToken()) {
+      try {
+        await quotesApi.submit({
+          items: quoteItems.map((it: any) => ({
+            productId: toBackendId(it.productId || it.id || ''),
+            quantity: it.quantity || 1,
+            notes: it.name || it.productName,
+          })),
+          notes: `Bulk quote from ${contactInfo.name || 'customer'}`,
+          contactPhone: contactInfo.phone,
+          contactEmail: contactInfo.email,
+        });
+      } catch (e) {
+        console.warn('[Quote] Backend submission failed, saving locally:', e);
+      }
+    }
 
     // Save to local orders (for demo purposes)
     const quoteData = {

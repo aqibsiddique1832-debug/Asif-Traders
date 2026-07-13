@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { cartApi, tokenStore } from '@/lib/backendApi';
 
 interface CartItem {
   productId: string;
@@ -27,17 +28,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return;
+    try {
       const savedCart = localStorage.getItem('asif_cart');
-      if (savedCart) {
-        try {
-          setItems(JSON.parse(savedCart));
-        } catch (e) {
-          console.error('Failed to parse cart:', e);
-        }
-      }
-      setIsLoaded(true);
+      if (savedCart) setItems(JSON.parse(savedCart));
+    } catch (e) {
+      console.error('Failed to parse cart:', e);
     }
+    setIsLoaded(true);
   }, []);
 
   // Save cart to localStorage on change
@@ -45,6 +43,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (isLoaded && typeof window !== 'undefined') {
       localStorage.setItem('asif_cart', JSON.stringify(items));
     }
+  }, [items, isLoaded]);
+
+  // If user is authenticated, sync cart from server on mount + on auth change
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const refresh = async () => {
+      if (!tokenStore.getToken()) return;
+      try {
+        const data: any = await cartApi.get();
+        if (data && data.cart && Array.isArray(data.cart.items)) {
+          const serverItems: CartItem[] = data.cart.items
+            .map((it: any) => ({
+              productId: it.productId,
+              variant: it.variant || '',
+              quantity: it.quantity || 1,
+            }))
+            .filter((it: CartItem) => !!it.productId);
+          // Merge with local items (union by productId+variant)
+          setItems((prev) => {
+            const map = new Map<string, CartItem>();
+            for (const i of prev) map.set(`${i.productId}::${i.variant}`, i);
+            for (const i of serverItems) map.set(`${i.productId}::${i.variant}`, i);
+            return Array.from(map.values());
+          });
+        }
+      } catch (e) {
+        // ignore — server may be cold
+      }
+    };
+    refresh();
+    const onAuth = () => refresh();
+    window.addEventListener('storage', onAuth);
+    return () => window.removeEventListener('storage', onAuth);
+  }, []);
+
+  // Sync changes to server if authenticated (debounced)
+  useEffect(() => {
+    if (!isLoaded || typeof window === 'undefined') return;
+    if (!tokenStore.getToken()) return;
+    const t = setTimeout(async () => {
+      try {
+        // Re-add each item to server (server merges)
+        for (const it of items) {
+          await cartApi.addItem(it.productId, it.quantity);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 600);
+    return () => clearTimeout(t);
   }, [items, isLoaded]);
 
   const addToCart = (productId: string, variant: string, quantity: number) => {

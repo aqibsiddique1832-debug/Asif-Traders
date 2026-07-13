@@ -31,9 +31,9 @@ export default function RegisterPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      router.push(redirectUrl);
+      window.location.replace(redirectUrl);
     }
-  }, [user, isLoading, router, redirectUrl]);
+  }, [user, isLoading, redirectUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -103,7 +103,7 @@ export default function RegisterPage() {
     if (success) {
       showToast('Account created successfully!', 'success');
       // Redirect to the page user was trying to access, or profile
-      router.push(redirectUrl);
+      window.location.replace(redirectUrl);
     } else {
       setError('Registration failed. Email or phone may already be in use.');
     }

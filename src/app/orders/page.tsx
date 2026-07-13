@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Package, FileText, Clock, Check, Truck, Phone, MapPin } from 'lucide-react';
+import { ordersApi, quotesApi, tokenStore } from '@/lib/backendApi';
+import { useAuth } from '@/context/AuthContext';
 
 interface QuoteRequest {
   id: string;
@@ -48,16 +50,75 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'quotes' | 'orders'>('quotes');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Load quotes from localStorage
+    // Load local-only items as base
     const savedQuotes = JSON.parse(localStorage.getItem('asif_quotes') || '[]');
     setQuotes(savedQuotes);
+    const localOrders = JSON.parse(localStorage.getItem('asif_orders') || '[]');
+    setOrders(localOrders);
 
-    // Load orders from localStorage
-    const savedOrders = JSON.parse(localStorage.getItem('asif_orders') || '[]');
-    setOrders(savedOrders);
-  }, []);
+    // If logged in, fetch real orders + quotes from backend
+    if (tokenStore.getToken() && user) {
+      (async () => {
+        try {
+          const [realOrders, realQuotes] = await Promise.all([
+            ordersApi.list({ limit: 50 }),
+            quotesApi.list({ limit: 50 }),
+          ]);
+
+          // Normalize real orders into the V1 Order shape
+          const normalizeOrder = (o: any): Order => ({
+            id: o.id,
+            orderNumber: o.orderNumber,
+            items: (o.items || []).map((it: any) => ({
+              productId: it.productId,
+              productName: it.product?.name || it.productName || '',
+              variantSize: it.variant?.size || it.variantSize || '',
+              quantity: it.quantity,
+              unitPrice: it.unitPrice || 0,
+              lineTotal: (it.unitPrice || 0) * (it.quantity || 1),
+            })),
+            address: {
+              name: o.address?.fullName || o.address?.name || '',
+              phone: o.address?.phone || '',
+              address: o.address?.addressLine1 || o.address?.address || '',
+              landmark: o.address?.addressLine2 || o.address?.landmark || '',
+              pincode: o.address?.pincode || '',
+            },
+            paymentMethod: o.paymentMethod || 'COD',
+            subtotal: o.subtotal || o.total || 0,
+            deliveryCharge: o.deliveryCharge || 0,
+            totalAmount: o.total || o.totalAmount || 0,
+            status: o.status || 'PENDING',
+            createdAt: o.createdAt || new Date().toISOString(),
+          });
+
+          const backendOrders: Order[] = (Array.isArray(realOrders) ? realOrders : (realOrders as any)?.orders || []).map(normalizeOrder);
+          // Merge backend orders with local (backend takes precedence)
+          const merged = [...backendOrders];
+          for (const lo of localOrders) {
+            if (!merged.find((bo) => bo.orderNumber === lo.orderNumber)) merged.unshift(lo);
+          }
+          setOrders(merged);
+
+          // Quotes
+          const backendQuotes: QuoteRequest[] = (Array.isArray(realQuotes) ? realQuotes : (realQuotes as any)?.quotes || []).map((q: any) => ({
+            id: q.id,
+            items: (q.items || []).map((it: any) => ({ name: it.product?.name || it.name || '', quantity: it.quantity || 1, unit: it.unit || '' })),
+            contact: { name: q.contactName || q.user?.name || '', phone: q.contactPhone || q.user?.phone || '' },
+            status: (q.status || 'pending').toLowerCase(),
+            createdAt: q.createdAt || new Date().toISOString(),
+            type: 'quote',
+          }));
+          setQuotes(backendQuotes);
+        } catch (e) {
+          console.warn('[Orders] Failed to load from backend, using local only:', e);
+        }
+      })();
+    }
+  }, [user]);
 
   const getQuoteStatusInfo = (status: QuoteRequest['status']) => {
     switch (status) {
